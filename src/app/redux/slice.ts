@@ -202,60 +202,60 @@ const Slice = createSlice({
 
 
         // 
-        AddTodo: (state, action) => {
-            console.log("Action : ", action.payload)
-            const tododata = {
-                id: nanoid(),
-                todo: action.payload
-            }
-            state.todos.push(tododata)
-        },
-        updateTodo: (state, action) => {
-            console.log("Updating Todo")
-            const { id, newTodo } = action.payload;
-            console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
-            if (id >= 0) {
-                state.todos[id].todo = newTodo;
-                console.log("Todo Updated : ", newTodo)
-            }
-        },
-        AddDoing: (state, action) => {
-            console.log("Action : ", action.payload)
-            const Doingdata = {
-                id: nanoid(),
-                todo: action.payload
-            }
-            state.doing.push(Doingdata)
-        },
-        updateDoing: (state, action) => {
-            console.log("Updating Todo")
-            const { id, newTodo } = action.payload;
-            console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
-            if (id >= 0) {
-                state.doing[id].todo = newTodo;
-                console.log("Todo Updated : ", newTodo)
-            }
-        },
-        AddDone: (state, action) => {
-            console.log("Action : ", action.payload)
-            const doneData = {
-                id: nanoid(),
-                todo: action.payload
-            }
-            state.done.push(doneData)
-        },
-        updateDone: (state, action) => {
-            console.log("Updating Todo")
-            const { id, newTodo } = action.payload;
-            console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
-            if (id >= 0) {
-                state.done[id].todo = newTodo;
-                console.log("Todo Updated : ", newTodo)
-            }
-        },
+        // AddTodo: (state, action) => {
+        //     console.log("Action : ", action.payload)
+        //     const tododata = {
+        //         id: nanoid(),
+        //         todo: action.payload
+        //     }
+        //     state.todos.push(tododata)
+        // },
+        // updateTodo: (state, action) => {
+        //     console.log("Updating Todo")
+        //     const { id, newTodo } = action.payload;
+        //     console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
+        //     if (id >= 0) {
+        //         state.todos[id].todo = newTodo;
+        //         console.log("Todo Updated : ", newTodo)
+        //     }
+        // },
+        // AddDoing: (state, action) => {
+        //     console.log("Action : ", action.payload)
+        //     const Doingdata = {
+        //         id: nanoid(),
+        //         todo: action.payload
+        //     }
+        //     state.doing.push(Doingdata)
+        // },
+        // updateDoing: (state, action) => {
+        //     console.log("Updating Todo")
+        //     const { id, newTodo } = action.payload;
+        //     console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
+        //     if (id >= 0) {
+        //         state.doing[id].todo = newTodo;
+        //         console.log("Todo Updated : ", newTodo)
+        //     }
+        // },
+        // AddDone: (state, action) => {
+        //     console.log("Action : ", action.payload)
+        //     const doneData = {
+        //         id: nanoid(),
+        //         todo: action.payload
+        //     }
+        //     state.done.push(doneData)
+        // },
+        // updateDone: (state, action) => {
+        //     console.log("Updating Todo")
+        //     const { id, newTodo } = action.payload;
+        //     console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
+        //     if (id >= 0) {
+        //         state.done[id].todo = newTodo;
+        //         console.log("Todo Updated : ", newTodo)
+        //     }
+        // },
 
     }
 })
 
-export const { AddTodo, updateTodo, AddDoing, updateDoing, AddDone, updateDone, addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards } = Slice.actions
+export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards } = Slice.actions
 export default Slice.reducer

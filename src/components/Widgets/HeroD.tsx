@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { FiEdit2, FiTrash } from "react-icons/fi";
 import { useSelector } from "react-redux";
@@ -15,6 +15,7 @@ const HeroD = () => {
     const [editingIndex, setEditingIndex] = useState<string | null>(null); // Track which input is being edited
     const [isAddingNewCard, setIsAddingNewCard] = useState(false);
     const [addingCardIndex, setaddingCardIndex] = useState<string | null>(null); // Track which input is being edited
+    const inputRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
     const dispatch = useDispatch();
 
     const handleAddNewInput = () => {
@@ -121,6 +122,11 @@ const HeroD = () => {
         }
     };
 
+    useEffect(() => {
+        if (isAddingNewCard && inputRef.current || editingIndex && inputRef.current) {
+          inputRef.current.focus(); // Focus the input when InpuField becomes true
+        }
+      }, [isAddingNewCard, editingIndex]);
 
     return (
         <DndContext onDragEnd={onDragEnd}>
@@ -146,7 +152,7 @@ const HeroD = () => {
                                                     <h2 className='text-[14px] font-[700] text-[#A1ACB5]'>
                                                         {item.title.length > 7 ? `${item.title.slice(0, 6)}...` : item.title}
                                                     </h2>
-                                                    <div className=''>
+                                                    <div className='hover:translate-y-[1px] transition-transform cursor-pointer'>
                                                         <FiTrash className='text-white text-[18px]' />
                                                     </div>
                                                 </div>
@@ -172,6 +178,7 @@ const HeroD = () => {
                                                                                         <input
                                                                                             type='text'
                                                                                             value={item.value}
+                                                                                            ref={inputRef} // Attach ref to the input
                                                                                             onChange={(e) => handleInputChange(e, item.id)}
                                                                                             className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
                                                                                             onKeyDown={(e) => handleKeyDownWhenEdit(e)}
@@ -184,13 +191,13 @@ const HeroD = () => {
                                                                                     )}
                                                                                     {/* Pencil Icon */}
                                                                                     <div className="absolute flex gap-x-[4px] top-1/2 right-[5px]">
-                                                                                        <div className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transform -translate-y-1/2'>
+                                                                                        <div className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiEdit2
                                                                                                 className=''
                                                                                                 onClick={() => handleEditClick(item.id)} // Enable input editing on click
                                                                                             />
                                                                                         </div>
-                                                                                        <div className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transform -translate-y-1/2'>
+                                                                                        <div className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiTrash />
                                                                                         </div>
                                                                                     </div>
@@ -207,6 +214,7 @@ const HeroD = () => {
                                                                         value={newInput}
                                                                         onChange={(e) => setNewInput(e.target.value)}
                                                                         onKeyDown={(e) => handleKeyDown(e, item.id)} // Handle pressing "Enter" key
+                                                                        ref={inputRef} // Attach ref to the input
                                                                         placeholder=''
                                                                         className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
                                                                     />
@@ -224,7 +232,7 @@ const HeroD = () => {
                                                     )}
                                                 </Droppable>
                                                 {/* Bottom */}
-                                                < div className='sticky bottom-0 z-10 items-baseline' >
+                                                < div className='sticky hover:translate-y-[1px] transition-transform bottom-0 z-10 items-baseline' >
                                                     {/* Add Card Button */}
                                                     < div
                                                         className='flex flex-row items-center gap-x-[11px] mt-[20px] mb-[15px] hover:bg-gray-800 rounded-md p-2 text-[#7B868E] cursor-pointer'
