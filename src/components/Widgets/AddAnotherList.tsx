@@ -10,26 +10,37 @@ const AddAnotherList = () => {
   const [InpuField, setInpuField] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
   const dispatch = useDispatch()
+  const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
+
 
   const submitInput = () => {
-    console.log(input)
-    setInput("")
-    setInpuField(false)
-    dispatch(addNewCard(input))
+    if (input.trim() == '') {
+      setShowInputError(true)
+    }
+    else {
+      setInput("")
+      setInpuField(false)
+      dispatch(addNewCard(input))
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      console.log("On Enter : ", input)
-      setInput('')
-      setInpuField(false)
-      dispatch(addNewCard(input))
+      if (input.trim() == '') {
+        setShowInputError(true)
+      }
+      else {
+        console.log("On Enter : ", input)
+        setInput('')
+        setInpuField(false)
+        dispatch(addNewCard(input))
+      }
     }
   };
 
   const handleCross = () => {
     setInput('')
-    setInpuField(false)    
+    setInpuField(false)
   }
 
   useEffect(() => {
@@ -58,7 +69,7 @@ const AddAnotherList = () => {
               onKeyDown={(e) => handleKeyDown(e)} // Handle pressing "Enter" key
               ref={inputRef} // Attach ref to the input
               placeholder='Enter list name...'
-              className='w-full rounded-md p-[8px] bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-blue-300 cursor-text'
+              className={`w-full rounded-md p-[8px] bg-[#22272B] text-[#A1ACB5]  cursor-text ${showInputError ? 'ring-2 ring-red-500' : 'hover:ring-2 ring-blue-300'}`}
             />
             {/* Button */}
             <div className='flex items-center justify-start mt-[16px] gap-x-[8px]'>

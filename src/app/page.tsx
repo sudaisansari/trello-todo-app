@@ -9,7 +9,8 @@ export default function Home() {
     <div>
       <FirestoreSync />
       <Header />
-      <div className="flex bg-gradient-to-tr from-primary to-secondary h-screen overflow-x-auto min-w-full">
+      {/* bg-gradient-to-tr from-primary to-secondary */}
+      <div className="flex bg-[#8F3F65] h-screen overflow-x-auto min-w-full">
         <HeroD />
         <AddAnotherList />
       </div>

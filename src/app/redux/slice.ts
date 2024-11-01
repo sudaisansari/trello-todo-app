@@ -14,6 +14,7 @@ interface Cards {
     }[];
 }
 
+
 const initialState: { todos: Todo[], doing: Todo[], done: Todo[], cardsArray: Cards[] } = {
     todos: [
         {
@@ -28,38 +29,7 @@ const initialState: { todos: Todo[], doing: Todo[], done: Todo[], cardsArray: Ca
     ]
     , doing: []
     , done: []
-    , cardsArray: [
-        {
-            id: "1",
-            title: "todo",
-            inputs: [
-                {
-                    id: "2",
-                    value: "Input 1"
-                },
-            ]
-        },
-        {
-            id: "3",
-            title: "doing",
-            inputs: [
-                {
-                    id: "4",
-                    value: "Input 1"
-                }
-            ]
-        },
-        {
-            id: "5",
-            title: "done",
-            inputs: [
-                {
-                    id: "6",
-                    value: "Input 1"
-                }
-            ]
-        }
-    ]
+    , cardsArray: []
 }
 
 const Slice = createSlice({
@@ -84,12 +54,7 @@ const Slice = createSlice({
             const cardsData = {
                 id: nanoid(),
                 title: category,
-                inputs: [
-                    {
-                        id: nanoid(),
-                        value: "Input 1"
-                    }
-                ]
+                inputs: []
             };
             state.cardsArray.push(cardsData);
             console.log("Cards Array:", state.cardsArray);
@@ -143,6 +108,50 @@ const Slice = createSlice({
                 console.error("Card with specified ID not found.");
             }
         },
+        deleteCardInput: (state, action) => {
+            console.log("Deleting New input in Card");
+            const id = action.payload;
+            console.log("ID to Delete : ", id);
+
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem => inputItem.id === id)
+            );
+
+            if (card) {
+                const inputIndex = card.inputs.findIndex(input => input.id === id); // Find input index by ID
+                if (inputIndex !== -1) {
+                    card.inputs.splice(inputIndex, 1); // Remove the input from the card’s inputs
+                    console.log("Input Deleted");
+                } else {
+                    console.error("Input with specified ID not found in the card.");
+                }
+            } else {
+                console.error("Card with specified ID not found.");
+            }
+        },
+        deleteCard: (state, action) => {
+            console.log("Deleting Card");
+            const id = action.payload;
+            console.log("ID to Delete : ", id);
+            const cardIndex = state.cardsArray.findIndex(card => card.id === id);
+            if (cardIndex !== -1) {
+                state.cardsArray.splice(cardIndex, 1); // Remove the card from the cardsArray
+                console.log("Card Deleted");
+            } else {
+                console.error("Card with specified ID not found.");
+            }
+        },
+        setCardsArray: (state, action) => {
+            state.cardsArray = action.payload; // Sets the value of cardsArray
+            console.log("Card Set  : ", state.cardsArray)
+        },
+        editTitle: (state, action) => {
+            console.log("Editing Title")
+            const { id, title } = action.payload;
+            console.log("ID : ", id, "New Todo : ", title, "in Slice", )
+            state.cardsArray.find((item) => (item.id === id))!.title = title
+        },
+
         reorderCardItems: (state, action: PayloadAction<{ sourceCardId: string, destinationCardId: string, sourceIndex: number, destinationIndex: number }>) => {
             const { sourceCardId, destinationCardId, sourceIndex, destinationIndex } = action.payload;
             console.log("Payload of DnD : ", action.payload);
@@ -257,5 +266,5 @@ const Slice = createSlice({
     }
 })
 
-export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards } = Slice.actions
+export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsArray, editTitle } = Slice.actions
 export default Slice.reducer

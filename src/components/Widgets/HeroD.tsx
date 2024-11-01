@@ -3,12 +3,20 @@ import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { FiEdit2, FiTrash } from "react-icons/fi";
 import { useSelector } from "react-redux";
-import { addCardInput, reorderCardItems, reorderCards, updateCardInput } from "@/app/redux/slice";
+import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, updateCardInput } from "@/app/redux/slice";
 import { useDispatch } from "react-redux";
 import { Draggable, Droppable, DropResult } from "react-beautiful-dnd";
 import { DndContext } from "@/components/context/Dndcontext";
 import { RootState } from "@/components/shared/types";
+import { subscribeToUserData } from "@/components/shared/fetchFirestoreData";
+import { useUserAuth } from "../context/AuthContext";
+// import { useDndMonitor } from "@dnd-kit/core";
 
+interface CardData {
+    id: string;
+    title: string;
+    inputs: Array<{ id: string; value: string }>; // Adjust based on the structure of your data
+}
 const HeroD = () => {
     const data = useSelector((state: RootState) => state.cardsArray || []);
     const [newInput, setNewInput] = useState(''); // State for new input
@@ -16,7 +24,22 @@ const HeroD = () => {
     const [isAddingNewCard, setIsAddingNewCard] = useState(false);
     const [addingCardIndex, setaddingCardIndex] = useState<string | null>(null); // Track which input is being edited
     const inputRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
+    const [titleIndex, setTitleIndex] = useState<string | null>(null);
+    const [currentTitle, setCurrentTitle] = useState<string>("");
+    const [currentTodo, setCurrentTodo] = useState<string>("");
+    const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
+    const [showAddCardError, setShowAddCardError] = useState<boolean>(false); // State to manage input error ring
     const dispatch = useDispatch();
+
+    const { user } = useUserAuth(); // To get the logged-in user
+    const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
+    useEffect(() => {
+        if (user) {
+            const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
+            return () => unsubscribe(); // Unsubscribe when the component unmounts
+        }
+    }, [user]);
+    console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
 
     const handleAddNewInput = () => {
         if (newInput) {
@@ -26,10 +49,24 @@ const HeroD = () => {
         }
     };
 
-    const handleEditClick = (id: string) => {
+    const handleEditClick = (id: string, todo: string) => {
         setEditingIndex(id); // Set the index of the input being edited
+        setCurrentTodo(todo)
         console.log("Editing Index : ", id)
     };
+
+    // const handleEditTitle = (id: string) => {
+    //     setTitleIndex(id); // Set the index of the input being edited
+    //     console.log("Editing Title : ", id)
+    // };
+
+    const handleDeleteInput = (id: string) => {
+        dispatch(deleteCardInput(id))
+    }
+
+    const handleDeleteCard = (id: string) => {
+        dispatch(deleteCard(id))
+    }
 
     const handleAddingNewCardInput = (id: string) => {
         setaddingCardIndex(id); // Set the index of the input being edited
@@ -40,18 +77,67 @@ const HeroD = () => {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
         if (e.key === 'Enter') {
-            console.log("On Enter : ", id, newInput)
-            dispatch(addCardInput({ id, input: newInput }))
-            setNewInput('')
-            setIsAddingNewCard(false)
+            if (newInput.trim() === '') {
+                setShowAddCardError(true)
+                console.log("No input")
+            }
+            else {
+                setShowAddCardError(false)
+                dispatch(addCardInput({ id, input: newInput }))
+                setNewInput('')
+                setIsAddingNewCard(false)
+            }
         }
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
         const newTodo = e.target.value
+        setCurrentTodo(newTodo)
         dispatch(updateCardInput({ id, input: newTodo }));
         console.log("ID : ", id, "New Todo : ", newTodo)
     };
+
+
+    // const handleTitle = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    //     setCurrentTitle(e.target.value);
+    //     const newTitle = e.target.value
+    //     dispatch(editTitle({ id, title: newTitle }));
+    //     console.log("ID : ", id, "New Todo : ", newTitle)
+    // };
+    const handleKeyDownTitle = (ekey: React.KeyboardEvent<HTMLInputElement>) => {
+        if (ekey.key === 'Enter') { // and this
+            if (currentTitle.trim() === '') {
+                setShowInputError(true)
+                console.log("No input")
+            }
+            else {
+                setTitleIndex(null) // old only this
+                setShowInputError(false)
+                dispatch(editTitle({ id: titleIndex, title: currentTitle }));
+                setCurrentTitle('')
+            }
+        }
+    };
+
+    const handleEditTitleClick = (id: string, title: string) => {
+        setTitleIndex(id);
+        setCurrentTitle(title);
+    };
+
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        const newTitle = e.target.value
+        setCurrentTitle(newTitle);
+        // dispatch(editTitle({ id, title: newTitle }));
+        console.log("ID : ", id, "New Todo : ", newTitle)
+    };
+
+    // const editTitleChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    //     const newTitle = e.target.value
+    //     dispatch(editTitle({ id, title: newTitle }));
+    //     console.log("ID : ", id, "New Todo : ", newTitle)
+    // };
+
 
     const handleKeyDownWhenEdit = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -61,9 +147,11 @@ const HeroD = () => {
         }
     };
 
+    const [isDragging, setIsDragging] = useState(false);
+
     const onDragEnd = (result: DropResult) => {
         console.log("On DnD Func")
-
+        setIsDragging(false);
         const { source, destination, draggableId } = result;
         console.log("Result : ", result);
         console.log("Source : ", source);
@@ -123,10 +211,55 @@ const HeroD = () => {
     };
 
     useEffect(() => {
-        if (isAddingNewCard && inputRef.current || editingIndex && inputRef.current) {
-          inputRef.current.focus(); // Focus the input when InpuField becomes true
+        if (isAddingNewCard && inputRef.current || editingIndex && inputRef.current || titleIndex && inputRef.current) {
+            inputRef.current.focus(); // Focus the input when InpuField becomes true
         }
-      }, [isAddingNewCard, editingIndex]);
+    }, [isAddingNewCard, editingIndex, titleIndex]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (inputRef.current && !inputRef.current.contains(event.target as Node) && titleIndex) {
+                // Dispatch action to save the title change on outside click
+                if (currentTitle.trim() === '') {
+                    setShowInputError(true)
+                    console.log("No input")
+                }
+                else {
+                    dispatch(editTitle({ id: titleIndex, title: currentTitle }));
+                    setTitleIndex(null); // Reset edit mode
+                    setShowInputError(false)
+                    setCurrentTitle('')
+                }
+            }
+            else if (inputRef.current && !inputRef.current.contains(event.target as Node) && editingIndex) {
+                // Dispatch action to save the title change on outside click
+                dispatch(updateCardInput({ id: editingIndex, input: currentTodo }));
+                setEditingIndex(null); // Reset edit mode
+            }
+            else if (inputRef.current && !inputRef.current.contains(event.target as Node) && isAddingNewCard && addingCardIndex) {
+                // Dispatch action to save the title change on outside click
+                if (newInput.trim() === '') {
+                    setShowAddCardError(true)
+                    console.log("No input")
+                }
+                else {
+                    setShowAddCardError(false)
+                    dispatch(addCardInput({ id: addingCardIndex, input: newInput }))
+                    setaddingCardIndex(null); // Reset edit mode
+                    setNewInput('')
+                    setIsAddingNewCard(false)
+                    setEditingIndex(null); // Reset edit mode
+                }
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [titleIndex, currentTitle, dispatch, editingIndex, currentTodo, isAddingNewCard, addingCardIndex, newInput]);
+
 
     return (
         <DndContext onDragEnd={onDragEnd}>
@@ -136,9 +269,9 @@ const HeroD = () => {
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className='flex items-baseline justify-start pt-4 ml-3 gap-[8px] md:gap-[16px]'>
+                            className='flex items-baseline justify-start pt-4 ml-[16px] gap-[8px] md:gap-[16px]'>
                             {
-                                data.map((item, index) => (
+                                cardsArray.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
                                         {(provided) => (
                                             <div
@@ -146,14 +279,51 @@ const HeroD = () => {
                                                 {...provided.draggableProps}
                                                 ref={provided.innerRef}
                                                 // key={index}
-                                                className='bg-[#101204] p-[8px] min-w-[275px] max-w-[300px] rounded-2xl'>
+                                                className='bg-[#101204] p-[8px] min-w-[275px] rounded-2xl'>
                                                 {/* Heading and icons */}
-                                                <div className='flex flex-row sticky top-0 z-10 justify-between items-center mt-[4px] mx-[8px]'>
-                                                    <h2 className='text-[14px] font-[700] text-[#A1ACB5]'>
+                                                <div className='flex flex-row sticky top-0 z-10 justify-between items-start mt-[4px] ml-[8px]'>
+                                                    {/* <h2 className='text-[14px] font-[700] text-[#A1ACB5]'>
                                                         {item.title.length > 7 ? `${item.title.slice(0, 6)}...` : item.title}
-                                                    </h2>
-                                                    <div className='hover:translate-y-[1px] transition-transform cursor-pointer'>
-                                                        <FiTrash className='text-white text-[18px]' />
+                                                    </h2> */}
+                                                    <div className="w-2/3">
+                                                        {titleIndex === item.id ? (
+                                                            // <input
+                                                            //     type='text'
+                                                            //     value={item.title}
+                                                            //     ref={inputRef} // Attach ref to the input
+                                                            //     onChange={(e) => editTitleChange(e, item.id)}
+                                                            //     className='pl-[13px] w-full rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
+                                                            //     onKeyDown={(e) => handleKeyDownTitle(e)}
+                                                            // />
+                                                            <input
+                                                                type='text'
+                                                                value={currentTitle}
+                                                                ref={inputRef} // Attach ref to the input
+                                                                onChange={(e) => handleTitleChange(e, item.id)}
+                                                                className={`pl-[13px] w-full rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
+                                                                onKeyDown={(e) => handleKeyDownTitle(e)}
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                className='hover:ring-2 font-[700] tracking-wider break-words ring-white pl-[13px] max-w-[176px] max-h-[100px] overflow-hidden pt-1 w-full rounded-xl bg-[#101204] text-[#A1ACB5]'>
+                                                                {item.title}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className=" flex gap-x-[8px] top-1/2 right-[5px]">
+                                                        <div className='hover:translate-y-[1px] bg-[#22272B] rounded-full p-2 transition-transform cursor-pointer'>
+                                                            <FiEdit2
+                                                                // onClick={() => handleEditTitle(item.id)}
+                                                                onClick={() => handleEditTitleClick(item.id, item.title)}
+                                                                className='text-white text-[18px]'
+                                                            />
+                                                        </div>
+                                                        <div className='hover:translate-y-[1px] bg-[#22272B] rounded-full p-2 transition-transform cursor-pointer'>
+                                                            <FiTrash
+                                                                onClick={() => handleDeleteCard(item.id)}
+                                                                className='text-white text-[18px]'
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 {/* Mapped Input Fields */}
@@ -161,7 +331,7 @@ const HeroD = () => {
                                                     {(provided) => (
                                                         <div
                                                             {...provided.droppableProps} ref={provided.innerRef}
-                                                            className='mt-[20px] p-2 flex flex-col gap-y-[7px] max-h-[380px] overflow-y-auto'>
+                                                            className='mt-[20px] p-2 flex flex-col gap-y-[7px] max-h-[340px] overflow-y-auto'>
                                                             {
                                                                 item.inputs.map((item, index) => (
                                                                     <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -194,11 +364,13 @@ const HeroD = () => {
                                                                                         <div className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiEdit2
                                                                                                 className=''
-                                                                                                onClick={() => handleEditClick(item.id)} // Enable input editing on click
+                                                                                                onClick={() => handleEditClick(item.id, item.value)} // Enable input editing on click
                                                                                             />
                                                                                         </div>
                                                                                         <div className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
-                                                                                            <FiTrash />
+                                                                                            <FiTrash
+                                                                                                onClick={() => handleDeleteInput(item.id)}
+                                                                                            />
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -216,7 +388,7 @@ const HeroD = () => {
                                                                         onKeyDown={(e) => handleKeyDown(e, item.id)} // Handle pressing "Enter" key
                                                                         ref={inputRef} // Attach ref to the input
                                                                         placeholder=''
-                                                                        className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
+                                                                        className={`pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5]  cursor-text ${showAddCardError ? 'ring-2 ring-red-500' : 'hover:ring-2 ring-white'}`}
                                                                     />
                                                                     {/* Pencil Icon */}
                                                                     <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
@@ -241,13 +413,16 @@ const HeroD = () => {
                                                         <FaPlus />
                                                         <span className='text-[14px] font-[400]'>Add a card</span>
                                                     </div>
-                                                    
+
                                                 </div>
                                             </div>
                                         )}
                                     </Draggable>
                                 ))}
                             {/* {provided.placeholder} */}
+                            {isDragging && (
+                                <div className="bg-[#101204] p-[8px] min-w-[275px] rounded-2xl opacity-50 border-2 border-dashed border-gray-500" />
+                            )}
                         </div>
                     )}
             </Droppable>
