@@ -5,7 +5,7 @@ import { FiEdit2, FiTrash } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, updateCardInput } from "@/app/redux/slice";
 import { useDispatch } from "react-redux";
-import { Draggable, Droppable, DropResult } from "react-beautiful-dnd";
+import { Draggable, DragStart, Droppable, DropResult } from "react-beautiful-dnd";
 import { DndContext } from "@/components/context/Dndcontext";
 import { RootState } from "@/components/shared/types";
 import { subscribeToUserData } from "@/components/shared/fetchFirestoreData";
@@ -28,7 +28,7 @@ const HeroD = () => {
     const [currentTitle, setCurrentTitle] = useState<string>("");
     const [currentTodo, setCurrentTodo] = useState<string>("");
     const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
-    const [showAddCardError, setShowAddCardError] = useState<boolean>(false); // State to manage input error ring
+    // const [showAddCardError, setShowAddCardError] = useState<boolean>(false); // State to manage input error ring
     const dispatch = useDispatch();
 
     const { user } = useUserAuth(); // To get the logged-in user
@@ -78,11 +78,11 @@ const HeroD = () => {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
         if (e.key === 'Enter') {
             if (newInput.trim() === '') {
-                setShowAddCardError(true)
+                // setShowAddCardError(true)
                 console.log("No input")
             }
             else {
-                setShowAddCardError(false)
+                // setShowAddCardError(false)
                 dispatch(addCardInput({ id, input: newInput }))
                 setNewInput('')
                 setIsAddingNewCard(false)
@@ -148,6 +148,15 @@ const HeroD = () => {
     };
 
     const [isDragging, setIsDragging] = useState(false);
+
+    const onDragStart = (result: DragStart) => {
+        const { draggableId } = result
+        if (draggableId.includes("card-")) {
+            setIsDragging(true);
+        } else {
+            setIsDragging(false);
+        }
+    };
 
     const onDragEnd = (result: DropResult) => {
         console.log("On DnD Func")
@@ -239,11 +248,14 @@ const HeroD = () => {
             else if (inputRef.current && !inputRef.current.contains(event.target as Node) && isAddingNewCard && addingCardIndex) {
                 // Dispatch action to save the title change on outside click
                 if (newInput.trim() === '') {
-                    setShowAddCardError(true)
+                    // setShowAddCardError(true)
                     console.log("No input")
+                    setaddingCardIndex(null); // Reset edit mode
+                    setEditingIndex(null); // Reset edit mode
+
                 }
                 else {
-                    setShowAddCardError(false)
+                    // setShowAddCardError(false)
                     dispatch(addCardInput({ id: addingCardIndex, input: newInput }))
                     setaddingCardIndex(null); // Reset edit mode
                     setNewInput('')
@@ -262,14 +274,14 @@ const HeroD = () => {
 
 
     return (
-        <DndContext onDragEnd={onDragEnd}>
+        <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
             <Droppable droppableId="all-columns" type="COLUMN" direction="horizontal">
                 {
                     (provided) => (
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className='flex items-baseline justify-start pt-4 ml-[16px] gap-[8px] md:gap-[16px]'>
+                            className='flex items-baseline justify-start pt-4 ml-[16px] gap-x-[8px] md:gap-x-[16px]'>
                             {
                                 cardsArray.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
@@ -279,33 +291,24 @@ const HeroD = () => {
                                                 {...provided.draggableProps}
                                                 ref={provided.innerRef}
                                                 // key={index}
-                                                className='bg-[#101204] p-[8px] min-w-[275px] rounded-2xl'>
+                                                className='bg-[#101204] p-[8px] min-w-[275px] max-w-[272px] rounded-2xl'>
                                                 {/* Heading and icons */}
                                                 <div className='flex flex-row sticky top-0 z-10 justify-between items-start mt-[4px] ml-[8px]'>
-                                                    {/* <h2 className='text-[14px] font-[700] text-[#A1ACB5]'>
-                                                        {item.title.length > 7 ? `${item.title.slice(0, 6)}...` : item.title}
-                                                    </h2> */}
                                                     <div className="w-2/3">
                                                         {titleIndex === item.id ? (
-                                                            // <input
-                                                            //     type='text'
-                                                            //     value={item.title}
-                                                            //     ref={inputRef} // Attach ref to the input
-                                                            //     onChange={(e) => editTitleChange(e, item.id)}
-                                                            //     className='pl-[13px] w-full rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-                                                            //     onKeyDown={(e) => handleKeyDownTitle(e)}
-                                                            // />
                                                             <input
                                                                 type='text'
                                                                 value={currentTitle}
                                                                 ref={inputRef} // Attach ref to the input
                                                                 onChange={(e) => handleTitleChange(e, item.id)}
-                                                                className={`pl-[13px] w-full rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
+                                                                className={`pl-[13px] w-auto rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
                                                                 onKeyDown={(e) => handleKeyDownTitle(e)}
                                                             />
                                                         ) : (
                                                             <div
-                                                                className='hover:ring-2 font-[700] tracking-wider break-words ring-white pl-[13px] max-w-[176px] max-h-[100px] overflow-hidden pt-1 w-full rounded-xl bg-[#101204] text-[#A1ACB5]'>
+                                                                style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
+                                                                className='font-[700] tracking-wider break-word pl-[13px] max-w-[176px] max-h-[100px] overflow-hidden pt-1 w-full rounded-xl bg-[#101204] text-[#A1ACB5]'>
+
                                                                 {item.title}
                                                             </div>
                                                         )}
@@ -331,7 +334,8 @@ const HeroD = () => {
                                                     {(provided) => (
                                                         <div
                                                             {...provided.droppableProps} ref={provided.innerRef}
-                                                            className='mt-[20px] p-2 flex flex-col gap-y-[7px] max-h-[340px] overflow-y-auto'>
+                                                            //max-w-[250px]
+                                                            className='mt-[12px] p-2 flex flex-col gap-y-[8px] max-h-[334px] overflow-y-auto'>
                                                             {
                                                                 item.inputs.map((item, index) => (
                                                                     <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -343,7 +347,7 @@ const HeroD = () => {
                                                                                     {...provided.dragHandleProps}
                                                                                     {...provided.draggableProps}
                                                                                     ref={provided.innerRef}
-                                                                                    className='relative w-[254px]'>
+                                                                                    className='relative'>
                                                                                     {editingIndex === item.id ? (
                                                                                         <input
                                                                                             type='text'
@@ -354,8 +358,9 @@ const HeroD = () => {
                                                                                             onKeyDown={(e) => handleKeyDownWhenEdit(e)}
                                                                                         />
                                                                                     ) : (
-                                                                                        <div
-                                                                                            className='hover:ring-2 break-words ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] w-[256px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
+                                                                                        <div 
+                                                                                        //max-w-[230px]
+                                                                                            className='hover:ring-2 break-words ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
                                                                                             {item.value}
                                                                                         </div>
                                                                                     )}
@@ -380,7 +385,7 @@ const HeroD = () => {
 
                                                             {/* Conditionally Show New Input Field */}
                                                             {addingCardIndex === item.id && isAddingNewCard && (
-                                                                <div className='relative w-[254px] mt-4'>
+                                                                <div className='relative mt-4'>
                                                                     <input
                                                                         type='text'
                                                                         value={newInput}
@@ -388,7 +393,7 @@ const HeroD = () => {
                                                                         onKeyDown={(e) => handleKeyDown(e, item.id)} // Handle pressing "Enter" key
                                                                         ref={inputRef} // Attach ref to the input
                                                                         placeholder=''
-                                                                        className={`pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5]  cursor-text ${showAddCardError ? 'ring-2 ring-red-500' : 'hover:ring-2 ring-white'}`}
+                                                                        className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5]  cursor-text hover:ring-2 ring-white'
                                                                     />
                                                                     {/* Pencil Icon */}
                                                                     <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
@@ -419,10 +424,11 @@ const HeroD = () => {
                                         )}
                                     </Draggable>
                                 ))}
-                            {/* {provided.placeholder} */}
                             {isDragging && (
-                                <div className="bg-[#101204] p-[8px] min-w-[275px] rounded-2xl opacity-50 border-2 border-dashed border-gray-500" />
+                                <div className="p-[8px] min-w-[303px] rounded-2xl opacity-50"></div>
+                                //  <div className="bg-[#101204] p-[8px] min-w-[303px] rounded-2xl opacity-50 border-2 border-dashed border-gray-500" />
                             )}
+                            {/* {provided.placeholder} */}
                         </div>
                     )}
             </Droppable>

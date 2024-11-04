@@ -15,5 +15,5 @@ export function middleware(request: NextRequest) {
 
 // Configure middleware to run for all pages except static files and Signup page
 export const config = {
-  matcher: "/((?!_next|Signup|api|favicon.ico).*)",
+  matcher: "/((?!_next|Signup|SignIn|api|favicon.ico).*)",
 };

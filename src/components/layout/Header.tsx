@@ -99,7 +99,7 @@ const Header = () => {
         </div>
       </div>
       <div>
-        <button onClick={handleSignOut} className="bg-[#22272B] hover:translate-y-[1px] transition-transform text-[#A1ACB5] hover:bg-red-800  p-2 rounded-md font-[500]">
+        <button onClick={handleSignOut} className=" hover:translate-y-[1px] transition-transform bg-indigo-600 text-white hover:bg-indigo-500 p-2 rounded-md font-[500]">
           Sign Out
         </button>
       </div>

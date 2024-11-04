@@ -1,12 +1,22 @@
-"use client"
+"use client";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { auth } from "@/app/firebase";
-import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from "firebase/auth";
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User
+} from "firebase/auth";
 import nookies from "nookies";
 
 interface AuthContextType {
   user: User | null;
   googleSignIn: () => Promise<void>;
+  emailSignIn: (email: string, password: string) => Promise<void>;
+  emailSignUp: (email: string, password: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -21,7 +31,22 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const token = await result.user.getIdToken();
     setUser(result.user);
 
-    // Set token in cookies
+    nookies.set(undefined, "authToken", token, { path: "/" });
+  };
+
+  const emailSignIn = async (email: string, password: string) => {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const token = await result.user.getIdToken();
+    setUser(result.user);
+
+    nookies.set(undefined, "authToken", token, { path: "/" });
+  };
+
+  const emailSignUp = async (email: string, password: string) => {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    const token = await result.user.getIdToken();
+    setUser(result.user);
+
     nookies.set(undefined, "authToken", token, { path: "/" });
   };
 
@@ -46,7 +71,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, googleSignIn, logOut }}>
+    <AuthContext.Provider value={{ user, googleSignIn, emailSignIn, emailSignUp, logOut }}>
       {children}
     </AuthContext.Provider>
   );
