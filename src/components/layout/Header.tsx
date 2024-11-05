@@ -15,15 +15,17 @@ interface CardData {
 }
 
 const Header = () => {
+  const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
   const dispatch = useDispatch()
   const [input, setInput] = useState<string>(''); // Input field
-  const [category, setCategory] = useState<string>('todo'); // Dropdown selection
   // const data = useSelector((state: RootState) => state.cardsArray || []);
   const { logOut } = useUserAuth();
   const router = useRouter()
   const { user } = useUserAuth(); // To get the logged-in user
-  const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
   const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
+  const titles = cardsArray.map((item) => (item.title))
+  const [category, setCategory] = useState<string>(titles[0] || ''); // Dropdown selection
+  console.log("Cat : ", category)
 
   useEffect(() => {
     if (user) {
@@ -32,6 +34,12 @@ const Header = () => {
     }
   }, [user]);
   console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
+
+  useEffect(() => {
+    if (category === '' && titles.length > 0) {
+      setCategory(titles[0]); // Set to the first title when available
+    }
+  }, [titles, category]);
 
   const handleSignOut = () => {
     try {
@@ -42,15 +50,13 @@ const Header = () => {
     }
   };
 
-  const titles = cardsArray.map((item) => (item.title))
-  // console.log("Titles : ", titles)
-
   const handleAdd = () => {
     if (input.trim() === '') {
       setShowInputError(true); // Show ring if input is empty
       return;
     }
     setShowInputError(false); // Remove ring if input is valid
+    console.log("Categ : ", category, " Input : ", input)
     dispatch(addNewInput({ category, value: input }));
     setInput(''); // Clear input after adding
   };
@@ -85,7 +91,7 @@ const Header = () => {
                 <option
                   key={index}
                   value={item}
-                  className='bg-[#22272B] text-[#A1ACB5] text-start'>
+                  className='bg-[#22272B] text-[16px] md:text-[16px] text-[#A1ACB5] text-start'>
                   {item.length > 7 ? `${item.slice(0, 6)}..` : item}
                 </option>
               ))

@@ -5,11 +5,12 @@ import { FiEdit2, FiTrash } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, updateCardInput } from "@/app/redux/slice";
 import { useDispatch } from "react-redux";
-import { Draggable, DragStart, Droppable, DropResult } from "react-beautiful-dnd";
+import { Draggable, DragStart, DragUpdate, Droppable, DropResult } from "react-beautiful-dnd";
 import { DndContext } from "@/components/context/Dndcontext";
 import { RootState } from "@/components/shared/types";
 import { subscribeToUserData } from "@/components/shared/fetchFirestoreData";
 import { useUserAuth } from "../context/AuthContext";
+import { isEmpty } from "lodash"
 // import { useDndMonitor } from "@dnd-kit/core";
 
 interface CardData {
@@ -30,9 +31,10 @@ const HeroD = () => {
     const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
     // const [showAddCardError, setShowAddCardError] = useState<boolean>(false); // State to manage input error ring
     const dispatch = useDispatch();
-
+    const [isDragging, setIsDragging] = useState(false);
     const { user } = useUserAuth(); // To get the logged-in user
     const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
+
     useEffect(() => {
         if (user) {
             const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
@@ -54,11 +56,6 @@ const HeroD = () => {
         setCurrentTodo(todo)
         console.log("Editing Index : ", id)
     };
-
-    // const handleEditTitle = (id: string) => {
-    //     setTitleIndex(id); // Set the index of the input being edited
-    //     console.log("Editing Title : ", id)
-    // };
 
     const handleDeleteInput = (id: string) => {
         dispatch(deleteCardInput(id))
@@ -97,13 +94,6 @@ const HeroD = () => {
         console.log("ID : ", id, "New Todo : ", newTodo)
     };
 
-
-    // const handleTitle = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
-    //     setCurrentTitle(e.target.value);
-    //     const newTitle = e.target.value
-    //     dispatch(editTitle({ id, title: newTitle }));
-    //     console.log("ID : ", id, "New Todo : ", newTitle)
-    // };
     const handleKeyDownTitle = (ekey: React.KeyboardEvent<HTMLInputElement>) => {
         if (ekey.key === 'Enter') { // and this
             if (currentTitle.trim() === '') {
@@ -132,13 +122,6 @@ const HeroD = () => {
         console.log("ID : ", id, "New Todo : ", newTitle)
     };
 
-    // const editTitleChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
-    //     const newTitle = e.target.value
-    //     dispatch(editTitle({ id, title: newTitle }));
-    //     console.log("ID : ", id, "New Todo : ", newTitle)
-    // };
-
-
     const handleKeyDownWhenEdit = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             setNewInput('')
@@ -147,18 +130,140 @@ const HeroD = () => {
         }
     };
 
-    const [isDragging, setIsDragging] = useState(false);
+    // DND
+    interface PH {
+        clientHeight: number;
+        clientWidth: number;
+        clientY: number;
+        clientX: number;
+    }
+
+    const [placeholderProps, setPlaceholderProps] = useState<PH>()
+    //     clientHeight: 0,
+    //     clientWidth: 0,
+    //     clientY: 0,
+    //     clientX: 0,
+    // });
+    const queryAttr = "data-rbd-drag-handle-draggable-id";
+
+    const getDraggedDom = (draggableId: string): HTMLElement | null => {
+        const domQuery = `[${queryAttr}='${draggableId}']`;
+        const draggedDOM = document.querySelector(domQuery) as HTMLElement | null;
+        return draggedDOM;
+    };
 
     const onDragStart = (result: DragStart) => {
-        const { draggableId } = result
-        if (draggableId.includes("card-")) {
-            setIsDragging(true);
-        } else {
-            setIsDragging(false);
+        const { draggableId } = result // old
+        const sourceIndex = parseFloat(result.source.droppableId)
+        if (draggableId.includes("card-")) { // old
+            setIsDragging(true);  //old
+            const draggedDOM = getDraggedDom(result.draggableId);
+            if (!draggedDOM) {
+                return;
+            }
+            const { clientHeight, clientWidth } = draggedDOM;
+            console.log("C H : ", clientHeight, " C W : ", clientWidth)
+            const parentNode = draggedDOM.parentNode;
+            if (parentNode instanceof Element) { // Ensure parentNode is an Element
+                const clientz = parseFloat(window.getComputedStyle(parentNode).paddingTop) +
+                    [...parentNode.children]
+                        .slice(0, sourceIndex)
+                        .reduce((total, curr) => {
+                            const style = window.getComputedStyle(curr);
+                            const marginBottom = parseFloat(style.marginBottom);
+                            
+                            return total + curr.clientHeight + marginBottom;
+                        }, 0);
+
+                setPlaceholderProps({
+                    clientHeight,
+                    clientWidth,
+                    clientY: parseFloat(
+                        window.getComputedStyle(parentNode).paddingLeft
+                    ),
+                    clientX: clientz
+                });
+                console.log("PropPL : ", placeholderProps)
+
+                // }
+                // else {
+                //     console.warn("The parent node is not an Element.");
+                // }
+
+            } else {
+                setIsDragging(false);
+            }
+        };
+    }
+    useEffect(() => {
+        console.log("Updated Placeholder Props:", placeholderProps);
+    }, [placeholderProps]);
+
+    const onDragUpdate = (event: DragUpdate) => {
+        if (!event.destination) {
+            return;
+        }
+
+        const draggedDOM = getDraggedDom(event.draggableId);
+
+        if (!draggedDOM) {
+            return;
+        }
+
+        const { clientHeight, clientWidth } = draggedDOM;
+        const destinationIndex = event.destination.index;
+        const sourceIndex = event.source.index;
+
+        const parentNode = draggedDOM.parentNode; // change
+
+        if (parentNode instanceof Element) {
+            const childrenArray = [...parentNode.children];
+            const movedItem = childrenArray[sourceIndex];
+            childrenArray.splice(sourceIndex, 1);
+
+            const updatedArray = [
+                ...childrenArray.slice(0, destinationIndex),
+                movedItem,
+                ...childrenArray.slice(destinationIndex + 1),
+            ];
+
+            const clientz =
+                parseFloat(window.getComputedStyle(parentNode).paddingTop) +
+                updatedArray.slice(0, destinationIndex).reduce((total, curr) => {
+                    const style = window.getComputedStyle(curr);
+                    const marginBottom = parseFloat(style.marginBottom);
+                    return total + curr.clientHeight + marginBottom;
+                }, 0);
+
+            setPlaceholderProps({
+                clientHeight,
+                clientWidth,
+                clientY: parseFloat(
+                    window.getComputedStyle(parentNode).paddingLeft
+                ),
+                clientX: clientz
+            });
+
+            // setPlaceholderProps({
+            //     clientHeight,
+            //     clientWidth,
+            //     clientY,
+            //     clientX: parseFloat(
+            //         window.getComputedStyle(parentNode).paddingLeft
+            //     ),
+            // });
         }
     };
 
+
     const onDragEnd = (result: DropResult) => {
+        setPlaceholderProps({
+            clientHeight: 0,
+            clientWidth: 0,
+            clientY: 0,
+            clientX: 0,
+        });
+
         console.log("On DnD Func")
         setIsDragging(false);
         const { source, destination, draggableId } = result;
@@ -274,14 +379,18 @@ const HeroD = () => {
 
 
     return (
-        <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DndContext
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragUpdate={onDragUpdate}
+        >
             <Droppable droppableId="all-columns" type="COLUMN" direction="horizontal">
                 {
-                    (provided) => (
+                    (provided, snapshot) => (
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className='flex items-baseline justify-start pt-4 ml-[16px] gap-x-[8px] md:gap-x-[16px]'>
+                            className='bg-red-300 w-[857px] relative flex items-baseline justify-start pt-4 ml-[16px] gap-x-[8px] md:gap-x-[16px]'>
                             {
                                 cardsArray.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
@@ -291,7 +400,20 @@ const HeroD = () => {
                                                 {...provided.draggableProps}
                                                 ref={provided.innerRef}
                                                 // key={index}
-                                                className='bg-[#101204] p-[8px] min-w-[275px] max-w-[272px] rounded-2xl'>
+                                                className='bg-[#101204] p-[8px] min-w-[275px] max-w-[272px] rounded-2xl'
+                                            >
+
+                                                {/* Render placeholder overlay when dragging */}
+                                                {/* {snapshot.isDragging ? (
+                                                    <div
+                                                        style={{
+                                                            height: placeholderProps?.clientHeight,
+                                                            width: placeholderProps?.clientWidth,
+                                                        }}
+                                                        className="p-[8px] bg-white rounded-2xl opacity-50"
+                                                    />
+                                                ) : ( */}
+                                                {/* <> */}
                                                 {/* Heading and icons */}
                                                 <div className='flex flex-row sticky top-0 z-10 justify-between items-start mt-[4px] ml-[8px]'>
                                                     <div className="w-2/3">
@@ -358,8 +480,8 @@ const HeroD = () => {
                                                                                             onKeyDown={(e) => handleKeyDownWhenEdit(e)}
                                                                                         />
                                                                                     ) : (
-                                                                                        <div 
-                                                                                        //max-w-[230px]
+                                                                                        <div
+                                                                                            //max-w-[230px]
                                                                                             className='hover:ring-2 break-words ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
                                                                                             {item.value}
                                                                                         </div>
@@ -420,14 +542,30 @@ const HeroD = () => {
                                                     </div>
 
                                                 </div>
+                                                {/* </> */}
+                                                {/* )} */}
+                                                {/* {provided.placeholder} Keep the provided placeholder for layout */}
                                             </div>
                                         )}
                                     </Draggable>
                                 ))}
-                            {isDragging && (
-                                <div className="p-[8px] min-w-[303px] rounded-2xl opacity-50"></div>
-                                //  <div className="bg-[#101204] p-[8px] min-w-[303px] rounded-2xl opacity-50 border-2 border-dashed border-gray-500" />
+                            {/* {provided.placeholder} */}
+                            {!isEmpty(placeholderProps) && snapshot.isDraggingOver && (
+                                <div
+                                    className="placeholder"
+                                    style={{
+                                        top: placeholderProps.clientY,
+                                        left: placeholderProps.clientX,
+                                        height: placeholderProps.clientHeight,
+                                        width: placeholderProps.clientWidth,
+                                    }}
+                                />
                             )}
+
+                            {/* Old */}
+                            {/* {snapshot.isDraggingOver && (
+                                <div className="p-[8px] w-[275px] rounded-2xl opacity-50 bg-white"></div>
+                            )} */}
                             {/* {provided.placeholder} */}
                         </div>
                     )}

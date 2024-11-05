@@ -1,15 +1,16 @@
 "use client";
 
-import { DragDropContext, DragStart, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, DragStart, DragUpdate, DropResult } from 'react-beautiful-dnd';
 
 
-export const DndContext = ({ children, onDragEnd, onDragStart }: {
+export const DndContext = ({ children, onDragEnd, onDragStart, onDragUpdate }: {
     children: React.ReactNode,
     onDragEnd: (result: DropResult) => void
     onDragStart?: (result: DragStart) => void
+    onDragUpdate?: (result: DragUpdate) => void
 }) => {
 
-    return <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    return <DragDropContext onDragUpdate={onDragUpdate} onDragStart={onDragStart} onDragEnd={onDragEnd}>
         {children}
     </DragDropContext>
 }
