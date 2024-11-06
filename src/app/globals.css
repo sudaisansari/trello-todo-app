@@ -8,6 +8,10 @@
     }
 }
 
+.roundedAndPadding {
+  @apply py-[8px] px-[12px] rounded-xl
+}
+
 /* For WebKit browsers like Chrome, Safari */
 .your-scrollable-class::-webkit-scrollbar {
     width: 8px; /* Adjust width as needed */
@@ -29,11 +33,4 @@
     scrollbar-color: #101204 #22272B;
   }
   
-
-  .placeholder {
-    position: absolute;
-    background-color: white;
-    border-radius: 3px;
-    border: dashed 1px blue;
-    background-color: white;
-  }
+  

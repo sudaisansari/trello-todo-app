@@ -76,7 +76,7 @@ const Header = () => {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className={`bg-[#22272B] text-[#A1ACB5] p-2 rounded-md ${showInputError ? 'ring-2 ring-red-500' : ''}`} // Conditional ring
+            className={`bg-[#22272B] text-[#A1ACB5] py-[8px] px-[12px] rounded-xl ${showInputError ? 'ring-2 ring-red-500' : ''}`} // Conditional ring
             placeholder="Enter task..."
           />
 
@@ -84,7 +84,7 @@ const Header = () => {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="bg-[#22272B] text-[#A1ACB5] min-w-[72px] p-2 rounded-md text-center mx-2 font-[500]"
+            className="bg-[#22272B] text-[#A1ACB5] hover:cursor-pointer min-w-[72px] py-[8px] px-[12px] rounded-xl mx-2 font-[500]"
           >
             {
               titles.map((item, index) => (
@@ -99,13 +99,13 @@ const Header = () => {
           </select>
 
           {/* Add Button */}
-          <button onClick={handleAdd} className="bg-[#22272B] hover:translate-y-[1px] transition-transform text-[#A1ACB5] hover:bg-[#101204]  p-2 rounded-md font-[500]">
+          <button onClick={handleAdd} className="bg-[#22272B] hover:translate-y-[1px] transition-transform text-[#A1ACB5] hover:bg-[#101204]  py-[8px] px-[12px] rounded-xl font-[500]">
             Add
           </button>
         </div>
       </div>
       <div>
-        <button onClick={handleSignOut} className=" hover:translate-y-[1px] transition-transform bg-indigo-600 text-white hover:bg-indigo-500 p-2 rounded-md font-[500]">
+        <button onClick={handleSignOut} className=" hover:translate-y-[1px] transition-transform bg-indigo-600 text-white hover:bg-indigo-500 py-[8px] px-[12px] rounded-xl font-[500]">
           Sign Out
         </button>
       </div>

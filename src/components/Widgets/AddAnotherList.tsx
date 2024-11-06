@@ -54,7 +54,7 @@ const AddAnotherList = () => {
       {/* Add Another list Button */}
       <div
         onClick={() => (setInpuField(true))}
-        className='flex flex-row hover:translate-y-[1px] transition-transform w-[272px] items-center justify-start gap-x-[11px] mt-[20px] mb-[15px] bg-[#22272B] text-[#A1ACB5] hover:bg-[#101204] rounded-md p-2  cursor-pointer'>
+        className='flex flex-row hover:translate-y-[1px] transition-transform w-[272px] items-center justify-start gap-x-[11px] mt-[20px] mb-[15px] bg-[#22272B] text-[#A1ACB5] hover:bg-[#101204] rounded-2xl p-2  cursor-pointer'>
         <FaPlus className='' />
         <span className='text-[16px] font-[700] '>Add another list</span>
       </div>
@@ -69,7 +69,7 @@ const AddAnotherList = () => {
               onKeyDown={(e) => handleKeyDown(e)} // Handle pressing "Enter" key
               ref={inputRef} // Attach ref to the input
               placeholder='Enter list name...'
-              className={`w-full rounded-md p-[8px] bg-[#22272B] text-[#A1ACB5]  cursor-text ${showInputError ? 'ring-2 ring-red-500' : 'hover:ring-2 ring-blue-300'}`}
+              className={`py-[8px] px-[12px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5]  cursor-text ${showInputError ? 'ring-2 ring-red-500' : 'hover:ring-2 ring-blue-300'}`}
             />
             {/* Button */}
             <div className='flex items-center justify-start mt-[16px] gap-x-[8px]'>
