@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { FiEdit2, FiTrash } from "react-icons/fi";
 import { useSelector } from "react-redux";
-import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, updateCardInput } from "@/app/redux/slice";
+import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, setCardsData, updateCardInput } from "@/app/redux/slice";
 import { useDispatch } from "react-redux";
 import { Draggable, DragStart, DragUpdate, Droppable, DropResult } from "react-beautiful-dnd";
 import { DndContext } from "@/components/context/Dndcontext";
@@ -11,6 +11,8 @@ import { RootState } from "@/components/shared/types";
 import { subscribeToUserData } from "@/components/shared/fetchFirestoreData";
 import { useUserAuth } from "../context/AuthContext";
 import { isEmpty } from "lodash"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface CardData {
     id: string;
@@ -31,6 +33,10 @@ const HeroD = () => {
     const dispatch = useDispatch();
     const { user } = useUserAuth(); // To get the logged-in user
     const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
+    const cardDeleted = () => toast("Card Deleted");
+    const listDeleted = () => toast("List Deleted");
+
+
     // Dnd
     interface PH {
         clientHeight: number;
@@ -43,12 +49,21 @@ const HeroD = () => {
     const [pl, setPl] = useState<number>()
 
 
+    // useEffect(() => {
+    //     if (user) {
+    //         const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
+    //         return () => unsubscribe(); // Unsubscribe when the component unmounts
+    //     }
+    // }, [user]);
     useEffect(() => {
         if (user) {
-            const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
-            return () => unsubscribe(); // Unsubscribe when the component unmounts
+            const unsubscribe = subscribeToUserData(user.uid, (cardsArray) => {
+                setCardsArray(cardsArray); // Update local state if needed
+                dispatch(setCardsData(cardsArray)); // Update Redux state
+            });
+            return () => unsubscribe(); // Clean up listener on unmount
         }
-    }, [user]);
+    }, [user, dispatch]);
     console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
     console.log("Redux Data : ", data)
 
@@ -59,10 +74,12 @@ const HeroD = () => {
     };
 
     const handleDeleteInput = (id: string) => {
+        cardDeleted()
         dispatch(deleteCardInput(id))
     }
 
     const handleDeleteCard = (id: string) => {
+        listDeleted()
         dispatch(deleteCard(id))
     }
 
@@ -88,10 +105,11 @@ const HeroD = () => {
         }
     };
 
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
         const newTodo = e.target.value
         setCurrentTodo(newTodo)
-        dispatch(updateCardInput({ id, input: newTodo }));
+        // dispatch(updateCardInput({ id, input: newTodo }));
         console.log("ID : ", id, "New Todo : ", newTodo)
     };
 
@@ -125,9 +143,18 @@ const HeroD = () => {
 
     const handleKeyDownWhenEdit = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
-            setNewInput('')
-            setEditingIndex(null)
-            setIsAddingNewCard(false)
+            if (currentTodo.trim() === '') {
+                // setShowInputError(true)
+                setEditingIndex(null)
+                console.log("No input")
+            }
+            else {
+                setEditingIndex(null) // old only this
+                setShowInputError(false)
+                dispatch(updateCardInput({ id: editingIndex, input: currentTodo }));
+                setCurrentTodo('')
+                setIsAddingNewCard(false)
+            }
         }
     };
 
@@ -362,8 +389,9 @@ const HeroD = () => {
             if (inputRef.current && !inputRef.current.contains(event.target as Node) && titleIndex) {
                 // Dispatch action to save the title change on outside click
                 if (currentTitle.trim() === '') {
-                    setShowInputError(true)
+                    //setShowInputError(false)
                     console.log("No input")
+                    setTitleIndex(null)
                 }
                 else {
                     dispatch(editTitle({ id: titleIndex, title: currentTitle }));
@@ -374,8 +402,15 @@ const HeroD = () => {
             }
             else if (inputRef.current && !inputRef.current.contains(event.target as Node) && editingIndex) {
                 // Dispatch action to save the title change on outside click
-                dispatch(updateCardInput({ id: editingIndex, input: currentTodo }));
-                setEditingIndex(null); // Reset edit mode
+                if (currentTodo.trim() === '') {
+                    console.log("No todo")
+                    setEditingIndex(null)
+                } else {
+                    dispatch(updateCardInput({ id: editingIndex, input: currentTodo }));
+                    setEditingIndex(null); // Reset edit mode
+                    setCurrentTodo('')
+                    setIsAddingNewCard(false)
+                }
             }
             else if (inputRef.current && !inputRef.current.contains(event.target as Node) && isAddingNewCard && addingCardIndex) {
                 // Dispatch action to save the title change on outside click
@@ -411,15 +446,27 @@ const HeroD = () => {
             onDragEnd={onDragEnd}
             onDragUpdate={onDragUpdate}
         >
+            <ToastContainer
+                position="bottom-right"
+                autoClose={1000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
             <Droppable droppableId="all-columns" type="COLUMN" direction="horizontal">
                 {
                     (provided, snapshot) => (
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className={`relative flex items-baseline justify-start pt-4`}>
+                            className={`relative flex items-start justify-start pt-4`}>
                             {
-                                cardsArray.map((item, index) => (
+                                data.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
                                         {(provided) => (
                                             <div
@@ -430,22 +477,22 @@ const HeroD = () => {
                                                 className='bg-[#101204] ml-[16px] p-[8px] min-w-[275px] max-w-[272px] rounded-2xl'
                                             >
                                                 {/* Heading and icons */}
-                                                <div className='flex flex-row sticky top-0 z-10 justify-between items-start mt-[4px] ml-[8px]'>
+                                                <div className='flex flex-row top-0 z-10 justify-between items-center mt-[4px] ml-[8px]'>
                                                     <div className="w-2/3">
                                                         {titleIndex === item.id ? (
                                                             <input
                                                                 type='text'
                                                                 value={currentTitle}
                                                                 ref={inputRef} // Attach ref to the input
+                                                                style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
                                                                 onChange={(e) => handleTitleChange(e, item.id)}
-                                                                className={`pl-[13px] w-auto rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
+                                                                className={`pl-[13px] font-[600] break-word w-[90%] rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
                                                                 onKeyDown={(e) => handleKeyDownTitle(e)}
                                                             />
                                                         ) : (
                                                             <div
                                                                 style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
                                                                 className='font-[600] tracking-wider break-word pl-[13px] max-w-[176px] max-h-[100px] overflow-hidden pt-1 w-full rounded-xl bg-[#101204] text-[#A1ACB5]'>
-
                                                                 {item.title}
                                                             </div>
                                                         )}
@@ -489,7 +536,7 @@ const HeroD = () => {
                                                                                     {editingIndex === item.id ? (
                                                                                         <input
                                                                                             type='text'
-                                                                                            value={item.value}
+                                                                                            value={currentTodo}
                                                                                             ref={inputRef} // Attach ref to the input
                                                                                             onChange={(e) => handleInputChange(e, item.id)}
                                                                                             className='py-[8px] px-[12px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
@@ -541,7 +588,7 @@ const HeroD = () => {
                                                     )}
                                                 </Droppable>
                                                 {/* Bottom */}
-                                                < div className='sticky hover:translate-y-[1px] px-2 transition-transform bottom-0 z-10 items-baseline' >
+                                                < div className=' hover:translate-y-[1px] px-2 transition-transform bottom-0 z-10 items-baseline' >
                                                     {/* Add Card Button */}
                                                     < div
                                                         className='flex flex-row items-center gap-x-[11px] my-[8px] hover:bg-[#22272B] rounded-xl p-2 text-[#7B868E] cursor-pointer'

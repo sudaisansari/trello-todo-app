@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+// import { ToastContainer, toast } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
+
 
 const SignUp: React.FC = () => {
   const { user, googleSignIn, emailSignUp } = useUserAuth();
@@ -13,6 +16,7 @@ const SignUp: React.FC = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  // const userSignUp = () => toast("Signed Up Successfully");
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -29,7 +33,7 @@ const SignUp: React.FC = () => {
         if (error.message.includes("email-already-in-use")) {
           setError("This email is already signed up.");
         } else {
-          setError("An error occurred check email. Please try again.");
+          setError("Invalid email or password.");
         }
       } else {
         console.error("Sign up error:", error); // Log unexpected error
@@ -47,16 +51,41 @@ const SignUp: React.FC = () => {
     }
   };
 
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { // and this
+      try {
+        await handleEmailSignUp();
+        router.push("/");
+      } catch (error) {
+        setError("Invalid email or password.");
+        console.error(error);
+      }
+    }
+  }
+
   useEffect(() => {
     if (user) {
+      // userSignUp()
       router.push("/");
     }
   }, [router, user]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#8F3F65]">
+      {/* <ToastContainer
+        position="bottom-right"
+        autoClose={1000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      /> */}
       <div className="mb-[50px]">
-        <h1 className="font-[700] text-[20px] lg:text-[3.125vw] text-white md:leading-[1.66666666667vw]">
+        <h1 className="font-[700] text-[30px] lg:text-[3.125vw] text-white md:leading-[1.66666666667vw]">
           My Trello board
         </h1>
       </div>
@@ -67,6 +96,7 @@ const SignUp: React.FC = () => {
           type="email"
           placeholder="Email"
           value={email}
+          onKeyDown={((e) => (handleKeyDown(e)))}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full p-3 mb-4 bg-gray-700 rounded outline-none text-white placeholder-gray-500"
         />
@@ -75,6 +105,7 @@ const SignUp: React.FC = () => {
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
+            onKeyDown={((e) => (handleKeyDown(e)))}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-3 bg-gray-700 rounded outline-none text-white placeholder-gray-500"
           />

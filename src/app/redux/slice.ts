@@ -141,7 +141,7 @@ const Slice = createSlice({
                 console.error("Card with specified ID not found.");
             }
         },
-        setCardsArray: (state, action) => {
+        setCardsData: (state, action) => {
             state.cardsArray = action.payload; // Sets the value of cardsArray
             console.log("Card Set  : ", state.cardsArray)
         },
@@ -266,5 +266,5 @@ const Slice = createSlice({
     }
 })
 
-export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsArray, editTitle } = Slice.actions
+export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle } = Slice.actions
 export default Slice.reducer
