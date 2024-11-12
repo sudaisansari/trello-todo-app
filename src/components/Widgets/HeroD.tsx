@@ -35,6 +35,7 @@ const HeroD = () => {
     const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
     const cardDeleted = () => toast("Card Deleted");
     const listDeleted = () => toast("List Deleted");
+    const [isDragging, setIsDragging] = useState(false)
 
 
     // Dnd
@@ -170,7 +171,8 @@ const HeroD = () => {
         const sourceIndex = result.source.index
         console.log("S I : ", sourceIndex)
         if (draggableId.includes("card-")) { // old
-            // setIsDragging(true);  //old
+            setIsDragging(true);  //old
+            console.log("On Drag Start", isDragging)
             const draggedDOM = getDraggedDom(result.draggableId);
             if (!draggedDOM) {
                 return;
@@ -241,7 +243,7 @@ const HeroD = () => {
     }, [placeholderProps, pl]);
 
     const onDragUpdate = (event: DragUpdate) => {
-        console.log("Drag Update")
+        console.log("On Drag Update", isDragging)
         const draggedDOM = getDraggedDom(event.draggableId);
         if (!event.destination) {
             return;
@@ -318,8 +320,8 @@ const HeroD = () => {
             clientX: 0,
         });
 
-        console.log("On DnD Func")
-        // setIsDragging(false);  old
+        setIsDragging(false);  //old
+        console.log("On Drag End", isDragging)
         const { source, destination, draggableId } = result;
         console.log("Result : ", result);
         console.log("Source : ", source);
@@ -447,7 +449,7 @@ const HeroD = () => {
             onDragUpdate={onDragUpdate}
         >
             <ToastContainer
-                position="bottom-right"
+                position="top-right"
                 autoClose={1000}
                 hideProgressBar={false}
                 newestOnTop={false}
@@ -464,7 +466,7 @@ const HeroD = () => {
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className={`relative flex items-start justify-start pt-4`}>
+                            className={`relative  flex items-start justify-start pt-4`}>
                             {
                                 data.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
@@ -474,10 +476,10 @@ const HeroD = () => {
                                                 {...provided.draggableProps}
                                                 ref={provided.innerRef}
                                                 // key={index}
-                                                className='bg-[#101204] ml-[16px] p-[8px] min-w-[275px] max-w-[272px] rounded-2xl'
+                                                className='bg-[#E5E7EB] ml-[16px] p-[4px] min-w-[275px] max-w-[272px] rounded-2xl'
                                             >
                                                 {/* Heading and icons */}
-                                                <div className='flex flex-row top-0 z-10 justify-between items-center mt-[4px] ml-[8px]'>
+                                                <div className='flex flex-row top-0 z-10 justify-evenly items-center '>
                                                     <div className="w-2/3">
                                                         {titleIndex === item.id ? (
                                                             <input
@@ -486,30 +488,30 @@ const HeroD = () => {
                                                                 ref={inputRef} // Attach ref to the input
                                                                 style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
                                                                 onChange={(e) => handleTitleChange(e, item.id)}
-                                                                className={`pl-[13px] font-[600] break-word w-[90%] rounded-xl bg-[#101204] text-[#A1ACB5] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
+                                                                className={`pl-[2px] pr-[6px] py-[2px] tracking-wider font-[600] break-word w-[90%] rounded-xl bg-[#E5E7EB] text-black hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
                                                                 onKeyDown={(e) => handleKeyDownTitle(e)}
                                                             />
                                                         ) : (
                                                             <div
                                                                 style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
-                                                                className='font-[600] tracking-wider break-word pl-[13px] max-w-[176px] max-h-[100px] overflow-hidden pt-1 w-full rounded-xl bg-[#101204] text-[#A1ACB5]'>
+                                                                className='font-[600] tracking-wider break-word pl-[2px] max-w-[176px] max-h-[100px] overflow-hidden py-[2px] w-full rounded-xl bg-[#E5E7EB] text-black'>
                                                                 {item.title}
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className=" flex gap-x-[8px] top-1/2 right-[5px]">
+                                                    <div className="flex items-center gap-x-[8px] top-1/2 pr-[2px]">
                                                         <div
                                                             onClick={() => handleEditTitleClick(item.id, item.title)}
-                                                            className='hover:translate-y-[1px] bg-[#22272B] rounded-full p-2 transition-transform cursor-pointer'>
+                                                            className='hover:translate-y-[1px] transition-transform cursor-pointer'>
                                                             <FiEdit2
-                                                                className='text-white text-[18px]'
+                                                                className='text-black text-[20px]'
                                                             />
                                                         </div>
                                                         <div
                                                             onClick={() => handleDeleteCard(item.id)}
-                                                            className='hover:translate-y-[1px] bg-[#22272B] rounded-full p-2 transition-transform cursor-pointer'>
+                                                            className='hover:translate-y-[1px] transition-transform cursor-pointer'>
                                                             <FiTrash
-                                                                className='text-white text-[18px]'
+                                                                className='text-black text-[20px]'
                                                             />
                                                         </div>
                                                     </div>
@@ -520,7 +522,7 @@ const HeroD = () => {
                                                         <div
                                                             {...provided.droppableProps} ref={provided.innerRef}
                                                             //max-w-[250px]
-                                                            className='mt-[8px] p-2 flex flex-col gap-y-[8px] max-h-[334px] overflow-y-auto'>
+                                                            className='px-2 pb-2 pt-1 flex flex-col gap-y-[8px] max-h-[120px] md:max-h-[180px] lg:max-h-[230px] overflow-y-auto'>
                                                             {
                                                                 item.inputs.map((item, index) => (
                                                                     <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -539,28 +541,30 @@ const HeroD = () => {
                                                                                             value={currentTodo}
                                                                                             ref={inputRef} // Attach ref to the input
                                                                                             onChange={(e) => handleInputChange(e, item.id)}
-                                                                                            className='py-[8px] px-[12px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
+                                                                                            className='py-[8px] pl-[12px] pr-[56px] tracking-wide w-full rounded-xl bg-[#6E776B] text-[#F4F4F4] hover:ring-2 ring-white cursor-text'
                                                                                             onKeyDown={(e) => handleKeyDownWhenEdit(e)}
                                                                                         />
                                                                                     ) : (
                                                                                         <div
                                                                                             //max-w-[230px]
-                                                                                            className='hover:ring-2 break-words ring-white py-[8px] px-[12px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
+                                                                                            className='hover:ring-2 tracking-wide break-words ring-black py-[8px] px-[12px] rounded-xl bg-[#6E776B] text-[#F4F4F4]'>
                                                                                             {item.value}
                                                                                         </div>
                                                                                     )}
                                                                                     {/* Pencil Icon */}
-                                                                                    <div className="absolute flex gap-x-[4px] top-1/2 right-[5px]">
+                                                                                    <div className="absolute flex gap-x-[px] top-1/2 right-[5px]">
                                                                                         <div
                                                                                             onClick={() => handleEditClick(item.id, item.value)} // Enable input editing on click
-                                                                                            className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
+                                                                                            className=' text-black bg-[#6E776B] hover:opacity-90 rounded-full p-[3px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiEdit2
+                                                                                                className="text-[18px]"
                                                                                             />
                                                                                         </div>
                                                                                         <div
                                                                                             onClick={() => handleDeleteInput(item.id)}
-                                                                                            className=' text-[#A1ACB5] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
+                                                                                            className=' text-black bg-[#6E776B] hover:opacity-90 rounded-full p-[3px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiTrash
+                                                                                                className="text-[18px]"
                                                                                             />
                                                                                         </div>
                                                                                     </div>
@@ -571,7 +575,7 @@ const HeroD = () => {
 
                                                             {/* Conditionally Show New Input Field */}
                                                             {addingCardIndex === item.id && isAddingNewCard && (
-                                                                <div className='mt-4'>
+                                                                <div className='mt-[4px]'>
                                                                     <input
                                                                         type='text'
                                                                         value={newInput}
@@ -579,8 +583,8 @@ const HeroD = () => {
                                                                         onKeyDown={(e) => handleKeyDown(e, item.id)} // Handle pressing "Enter" key
                                                                         ref={inputRef} // Attach ref to the input
                                                                         placeholder=''
-                                                                        className='py-[8px] px-[12px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5]  cursor-text hover:ring-2 ring-white'
-                                                                    />
+                                                                        className='py-[8px] px-[12px] tracking-wide w-full rounded-xl bg-[#6E776B] text-[#F4F4F4] hover:ring-2 ring-white cursor-text'
+                                                                        />
                                                                 </div>
                                                             )}
                                                             {provided.placeholder}
@@ -588,14 +592,14 @@ const HeroD = () => {
                                                     )}
                                                 </Droppable>
                                                 {/* Bottom */}
-                                                < div className=' hover:translate-y-[1px] px-2 transition-transform bottom-0 z-10 items-baseline' >
+                                                < div className=' hover:translate-y-[1px] px-2 transition-transform bottom-0 z- items-baseline' >
                                                     {/* Add Card Button */}
                                                     < div
-                                                        className='flex flex-row items-center gap-x-[11px] my-[8px] hover:bg-[#22272B] rounded-xl p-2 text-[#7B868E] cursor-pointer'
+                                                        className='flex flex-row items-center  gap-x-[11px] my-[8px] hover:bg-[#6E776B] rounded-xl p-2 text-black cursor-pointer'
                                                         onClick={() => handleAddingNewCardInput(item.id)} // Show new input field when clicked
                                                     >
                                                         <FaPlus />
-                                                        <span className='text-[14px] font-[400]'>Add a card</span>
+                                                        <span className='text-[14px] font-[500]'>Add a card</span>
                                                     </div>
 
                                                 </div>
@@ -605,7 +609,7 @@ const HeroD = () => {
                                 ))}
                             {!isEmpty(placeholderProps) && snapshot.isDraggingOver && (
                                 <div
-                                    className="absolute rounded-xl bg-white opacity-10"
+                                    className="absolute rounded-xl bg-black opacity-20"
                                     style={{
                                         // position: 'absolute',
                                         top: 16,
@@ -615,9 +619,10 @@ const HeroD = () => {
                                     }}
                                 />
                             )}
-                            {snapshot.isDraggingOver && (
-                                <div className="p-[8px] mr-[16px] w-[275px] rounded-2xl opacity-50"></div>
-                            )}
+                            {/* {snapshot.isDraggingOver && (
+                                <div className="p-[8px] mr-[16px] bg-slate-400 w-[275px] rounded-2xl opacity-50"></div>
+                            )} */}
+
                             {/* {provided.placeholder} */}
                         </div>
                     )}

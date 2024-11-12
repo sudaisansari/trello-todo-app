@@ -2,7 +2,7 @@
                 <div key={index} className='bg-[#101204] w-[272px] p-[8px] rounded-2xl'>
                     {/* Heading and icons */}
                     <div className='flex flex-row justify-between items-center mt-[4px] mx-[8px]'>
-                        <h2 className='text-[14px] font-[700] text-[#A1ACB5]'>{item.title}</h2>
+                        <h2 className='text-[14px] font-[700] text-[#F4F4F4]'>{item.title}</h2>
                         <div className='flex flex-row gap-x-[16px]'>
                             <CgArrowsScrollH className='text-white text-[20px]' />
                             <BsThreeDots className='text-white text-[20px]' />
@@ -23,18 +23,18 @@
                                                 type='text'
                                                 value={item.value}
                                                 onChange={(e) => handleInputChange(e, item.id)}
-                                                className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
+                                                className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#F4F4F4] hover:ring-2 ring-white cursor-text'
                                                 onKeyDown={(e) => handleKeyDownWhenEdit(e)}
                                             />
                                         ) : (
-                                            <div className='hover:ring-2 ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] w-[254px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
+                                            <div className='hover:ring-2 ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] w-[254px] rounded-xl bg-[#22272B] text-[#F4F4F4]'>
                                                 {item.value}
                                             </div>
                                         )}
                                         {/* Pencil Icon */}
                                         <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
                                             <FiEdit2
-                                                className='text-[#A1ACB5] hover:text-white cursor-pointer'
+                                                className='text-[#F4F4F4] hover:text-white cursor-pointer'
                                                 onClick={() => handleEditClick(item.id)} // Enable input editing on click
                                             />
                                         </div>
@@ -54,12 +54,12 @@
                                     onChange={(e) => setNewInput(e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(e, item.id)} // Handle pressing "Enter" key
                                     placeholder=''
-                                    className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
+                                    className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#F4F4F4] hover:ring-2 ring-white cursor-text'
                                 />
                                 {/* Pencil Icon */}
                                 <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
                                     <FiEdit2
-                                        className='text-[#A1ACB5] hover:text-white cursor-pointer'
+                                        className='text-[#F4F4F4] hover:text-white cursor-pointer'
                                         onClick={handleAddNewInput} // Add new input to data array
                                     />
                                 </div>

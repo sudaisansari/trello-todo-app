@@ -1,486 +1,629 @@
-// "use client";
+"use client"
+import { useEffect, useRef, useState } from "react";
+import { FaPlus } from "react-icons/fa6";
+import { FiEdit2, FiTrash } from "react-icons/fi";
+import { useSelector } from "react-redux";
+import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, setCardsData, updateCardInput } from "@/app/redux/slice";
+import { useDispatch } from "react-redux";
+import { Draggable, DragStart, DragUpdate, Droppable, DropResult } from "react-beautiful-dnd";
+import { DndContext } from "@/components/context/Dndcontext";
+import { RootState } from "@/components/shared/types";
+import { subscribeToUserData } from "@/components/shared/fetchFirestoreData";
+import { useUserAuth } from "../context/AuthContext";
+import { isEmpty } from "lodash"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// import React, { useState } from 'react';
-// import { FaPlus, FaIdCard } from "react-icons/fa6";
-// import { FiEdit2 } from "react-icons/fi";
-// import { Draggable, Droppable, } from "react-beautiful-dnd";
-// import { DndContext } from '../context/Dndcontext';
-// import { useSelector } from 'react-redux';
-// import { useDispatch } from 'react-redux';
-// import { AddDoing, AddDone, AddTodo, updateDoing, updateDone, updateTodo } from '@/app/redux/slice';
-// import HeadingandIcons from '../shared/Extra/HeadingandIcons';
+interface CardData {
+    id: string;
+    title: string;
+    inputs: Array<{ id: string; value: string }>; // Adjust based on the structure of your data
+}
+const HeroD = () => {
+    const data = useSelector((state: RootState) => state.cardsArray || []);
+    const [newInput, setNewInput] = useState(''); // State for new input
+    const [editingIndex, setEditingIndex] = useState<string | null>(null); // Track which input is being edited
+    const [isAddingNewCard, setIsAddingNewCard] = useState(false);
+    const [addingCardIndex, setaddingCardIndex] = useState<string | null>(null); // Track which input is being edited
+    const inputRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
+    const [titleIndex, setTitleIndex] = useState<string | null>(null);
+    const [currentTitle, setCurrentTitle] = useState<string>("");
+    const [currentTodo, setCurrentTodo] = useState<string>("");
+    const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
+    const dispatch = useDispatch();
+    const { user } = useUserAuth(); // To get the logged-in user
+    const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
+    const cardDeleted = () => toast("Card Deleted");
+    const listDeleted = () => toast("List Deleted");
 
-// const Hero = () => {
-//   //First Card
-//   const [newInput, setNewInput] = useState(''); // State for new input
-//   const [editingIndex, setEditingIndex] = useState<string | null>(null); // Track which input is being edited
-//   const [isAddingNewCard, setIsAddingNewCard] = useState(false);
 
-//   type Todo = {
-//     id: string;
-//     todo: string;
-//   };
+    // Dnd
+    interface PH {
+        clientHeight: number;
+        clientWidth: number;
+        clientY: number;
+        clientX: number;
+    }
+    const [placeholderProps, setPlaceholderProps] = useState<PH>()
+    const queryAttr = "data-rbd-drag-handle-draggable-id";
+    const [pl, setPl] = useState<number>()
 
-//   type cardsArray = {
-//     id: string,
-//     title: string,
-//     inputs: {
-//         id: string,
-//         value: string
-//     }
-//   }
 
-//   type RootState = {
-//     todos: Todo[];
-//     doing: Todo[];
-//     done: Todo[];
-//     cards: cardsArray[]
-//   };
+    // useEffect(() => {
+    //     if (user) {
+    //         const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
+    //         return () => unsubscribe(); // Unsubscribe when the component unmounts
+    //     }
+    // }, [user]);
+    useEffect(() => {
+        if (user) {
+            const unsubscribe = subscribeToUserData(user.uid, (cardsArray) => {
+                setCardsArray(cardsArray); // Update local state if needed
+                dispatch(setCardsData(cardsArray)); // Update Redux state
+            });
+            return () => unsubscribe(); // Clean up listener on unmount
+        }
+    }, [user, dispatch]);
+    console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
+    console.log("Redux Data : ", data)
 
-//   // Way to Display the array of cards
-//   // const cards = useSelector((state:RootState) => state.cards)
-//   // console.log("Cards : ", cards)
-//   // cards.map((item)=>(item.title, item.inputs.value))
+    const handleEditClick = (id: string, todo: string) => {
+        setEditingIndex(id); // Set the index of the input being edited
+        setCurrentTodo(todo)
+        console.log("Editing Index : ", id)
+    };
 
-//   const dispatch = useDispatch()
-//   const todoData = useSelector((state: RootState) => state.todos);
-//   const doingData = useSelector((state: RootState) => state.doing);
-//   const doneData = useSelector((state: RootState) => state.done);
+    const handleDeleteInput = (id: string) => {
+        cardDeleted()
+        dispatch(deleteCardInput(id))
+    }
 
-//   const handleAddNewInput = () => {
-//     if (newInput) {
-//       console.log("New Input : ", newInput)
-//       setNewInput(''); // Clear the input field
-//       setIsAddingNewCard(false); // Hide the new input field after adding
-//     }
-//   };
+    const handleDeleteCard = (id: string) => {
+        listDeleted()
+        dispatch(deleteCard(id))
+    }
 
-//   const addTodoDispatcher = () => {
-//     console.log("Added new Input : ", newInput)
-//     dispatch(AddTodo(newInput))
-//   }
+    const handleAddingNewCardInput = (id: string) => {
+        setaddingCardIndex(id); // Set the index of the input being edited
+        setIsAddingNewCard(true)
+        setNewInput('');
+        console.log("Adding New Input Index : ", id)
+    };
 
-//   const handleEditClick = (index: string) => {
-//     setEditingIndex(index); // Set the index of the input being edited
-//     console.log("Editing Index : ", index)
-//   };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
+        if (e.key === 'Enter') {
+            if (newInput.trim() === '') {
+                // setShowAddCardError(true)
+                console.log("No input")
+            }
+            else {
+                // setShowAddCardError(false)
+                dispatch(addCardInput({ id, input: newInput }))
+                setNewInput('')
+                setIsAddingNewCard(false)
+            }
+        }
+    };
 
-//   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
-//     const newTodo = e.target.value
-//     dispatch(updateTodo({ id, newTodo }));
-//     console.log("ID : ", id, "New Todo : ", newTodo)
-//   };
 
-//   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === 'Enter') {
-//       addTodoDispatcher()
-//       setNewInput('')
-//       setIsAddingNewCard(false)
-//     }
-//   };
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        const newTodo = e.target.value
+        setCurrentTodo(newTodo)
+        // dispatch(updateCardInput({ id, input: newTodo }));
+        console.log("ID : ", id, "New Todo : ", newTodo)
+    };
 
-//   const handleKeyDownWhenEdit = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === 'Enter') {
-//       setNewInput('')
-//       setIsAddingNewCard(false)
-//     }
-//   };
+    const handleKeyDownTitle = (ekey: React.KeyboardEvent<HTMLInputElement>) => {
+        if (ekey.key === 'Enter') { // and this
+            if (currentTitle.trim() === '') {
+                setShowInputError(true)
+                console.log("No input")
+            }
+            else {
+                setTitleIndex(null) // old only this
+                setShowInputError(false)
+                dispatch(editTitle({ id: titleIndex, title: currentTitle }));
+                setCurrentTitle('')
+            }
+        }
+    };
 
-//   //Second Card
-//   const [newInput2, setNewInput2] = useState(''); // State for new input
-//   const [editingIndex2, setEditingIndex2] = useState<string | null>(null); // Track which input is being edited
-//   const [isAddingNewCard2, setIsAddingNewCard2] = useState(false); // Track whether to show new input field
+    const handleEditTitleClick = (id: string, title: string) => {
+        setTitleIndex(id);
+        setCurrentTitle(title);
+    };
 
-//   const handleAddNewInput2 = () => {
-//     if (newInput2) {
-//       console.log("New Input : ", newInput2)
-//       setNewInput2(''); // Clear the input field
-//       setIsAddingNewCard2(false); // Hide the new input field after adding
-//     }
-//   };
 
-//   const addDoingDispatcher2 = () => {
-//     console.log("Added new Input : ", newInput2)
-//     dispatch(AddDoing(newInput2))
-//   }
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        const newTitle = e.target.value
+        setCurrentTitle(newTitle);
+        // dispatch(editTitle({ id, title: newTitle }));
+        console.log("ID : ", id, "New Todo : ", newTitle)
+    };
 
-//   const handleEditClick2 = (index: string) => {
-//     setEditingIndex2(index); // Set the index of the input being edited
-//     console.log("Editing Index : ", index)
-//   };
+    const handleKeyDownWhenEdit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            if (currentTodo.trim() === '') {
+                // setShowInputError(true)
+                setEditingIndex(null)
+                console.log("No input")
+            }
+            else {
+                setEditingIndex(null) // old only this
+                setShowInputError(false)
+                dispatch(updateCardInput({ id: editingIndex, input: currentTodo }));
+                setCurrentTodo('')
+                setIsAddingNewCard(false)
+            }
+        }
+    };
 
-//   const handleInputChange2 = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
-//     const newTodo = e.target.value
-//     dispatch(updateDoing({ id, newTodo }));
-//     console.log("ID : ", id, "New Todo : ", newTodo)
-//   };
+    // DND
+    const getDraggedDom = (draggableId: string): HTMLElement | null => {
+        const domQuery = `[${queryAttr}='${draggableId}']`;
+        const draggedDOM = document.querySelector(domQuery) as HTMLElement | null;
+        return draggedDOM;
+    };
 
-//   const handleKeyDown2 = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === 'Enter') {
-//       addDoingDispatcher2()
-//       setNewInput2('')
-//       setIsAddingNewCard2(false)
-//     }
-//   };
+    const onDragStart = (result: DragStart) => {
+        const { draggableId } = result // old
+        const sourceIndex = result.source.index
+        console.log("S I : ", sourceIndex)
+        if (draggableId.includes("card-")) { // old
+            // setIsDragging(true);  //old
+            const draggedDOM = getDraggedDom(result.draggableId);
+            if (!draggedDOM) {
+                return;
+            }
+            const { clientHeight, clientWidth } = draggedDOM;
+            const parentNode = draggedDOM.parentNode;
+            console.log("Parent N : ", parentNode)
+            if (parentNode instanceof Element) { // Ensure parentNode is an Element
+                if (sourceIndex === 0) {
+                    const clientX = 16;
+                    setPl(clientX)
+                    setPlaceholderProps({
+                        clientHeight,
+                        clientWidth,
+                        clientY: parseFloat(
+                            window.getComputedStyle(parentNode).paddingLeft
+                        ),
+                        clientX: clientX
+                    });
+                }
+                else if (sourceIndex === 1) {
+                    const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
+                        [...parentNode.children]
+                            .slice(0, sourceIndex)
+                            .reduce((total, curr) => {
+                                const style = window.getComputedStyle(curr);
+                                const marginRight = parseFloat(style.marginRight); // Use marginRight for horizontal space
+                                const additionalGap = sourceIndex * 16 // Add gap except after the last element
+                                return total + curr.clientWidth + marginRight + 16 + additionalGap;
+                            }, 0);
+                    setPl(clientX)
+                    setPlaceholderProps({
+                        clientHeight,
+                        clientWidth,
+                        clientY: parseFloat(
+                            window.getComputedStyle(parentNode).paddingLeft
+                        ),
+                        clientX: clientX
+                    });
+                } else if (sourceIndex > 1) {
+                    const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
+                        [...parentNode.children]
+                            .slice(0, sourceIndex)
+                            .reduce((total, curr) => {
+                                const style = window.getComputedStyle(curr);
+                                const marginRight = parseFloat(style.marginRight); // Use marginRight for horizontal space
+                                const additionalGap = sourceIndex * 16 + 16 // Add gap except after the last element
+                                const gapToAdd = additionalGap / sourceIndex
+                                return total + curr.clientWidth + marginRight + gapToAdd;
+                            }, 0);
+                    setPl(clientX)
+                    setPlaceholderProps({
+                        clientHeight,
+                        clientWidth,
+                        clientY: parseFloat(
+                            window.getComputedStyle(parentNode).paddingLeft
+                        ),
+                        clientX: clientX
+                    });
+                }
 
-//   const handleKeyDownWhenEdit2 = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === 'Enter') {
-//       setNewInput2('')
-//       setIsAddingNewCard2(false)
-//     }
-//   };
+            }
+        };
+    }
+    useEffect(() => {
+        console.log("Updated Placeholder Props:", placeholderProps);
+        console.log("P L : ", pl)
+    }, [placeholderProps, pl]);
 
-//   // Third Card
-//   const [newInput3, setNewInput3] = useState(''); // State for new input
-//   const [editingIndex3, setEditingIndex3] = useState<string | null>(null); // Track which input is being edited
-//   const [isAddingNewCard3, setIsAddingNewCard3] = useState(false); // Track whether to show new input field 
+    const onDragUpdate = (event: DragUpdate) => {
+        console.log("Drag Update")
+        const draggedDOM = getDraggedDom(event.draggableId);
+        if (!event.destination) {
+            return;
+        }
+        if (!draggedDOM) {
+            return;
+        }
+        const { clientHeight, clientWidth } = draggedDOM;
+        const destinationIndex = event.destination.index;
+        const sourceIndex = event.source.index;
+        const parentNode = draggedDOM.parentNode; // change
+        if (parentNode instanceof Element) {
+            const childrenArray = [...parentNode.children];
+            childrenArray.splice(sourceIndex, 1);
+            if (destinationIndex === 0) {
+                const clientX = 16;
+                setPl(clientX);
+                setPlaceholderProps({
+                    clientHeight,
+                    clientWidth,
+                    clientY: parseFloat(window.getComputedStyle(parentNode).paddingTop), // Use paddingTop if needed
+                    clientX: clientX
+                });
+            } else if (destinationIndex === 1) {
+                const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
+                    [...parentNode.children]
+                        .slice(0, destinationIndex) // Or `sourceIndex` in case of `dragStart`
+                        .reduce((total, curr) => {
+                            const style = window.getComputedStyle(curr);
+                            const marginRight = parseFloat(style.marginRight);
+                            return total + curr.clientWidth + marginRight + 16 + 16; // 16px gap added here
+                        }, 0);
 
-//   const handleAddNewInput3 = () => {
-//     if (newInput3) {
-//       console.log("New Input : ", newInput3)
-//       setNewInput3(''); // Clear the input field
-//       setIsAddingNewCard3(false); // Hide the new input field after adding
-//     }
-//   };
+                // Set placeholder properties for positioning
+                setPl(clientX);
+                setPlaceholderProps({
+                    clientHeight,
+                    clientWidth,
+                    clientY: parseFloat(window.getComputedStyle(parentNode).paddingTop), // Use paddingTop if needed
+                    clientX: clientX
+                });
+            }
+            else if (destinationIndex > 1 && childrenArray.length) {
+                const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
+                    [...parentNode.children]
+                        .slice(0, destinationIndex) // Or `sourceIndex` in case of `dragStart`
+                        .reduce((total, curr) => {
+                            const style = window.getComputedStyle(curr);
+                            const marginRight = parseFloat(style.marginRight);
+                            const additionalGap = destinationIndex * 16 + 16 // Add gap except after the last element
+                            const gapToAdd = additionalGap / destinationIndex
+                            return total + curr.clientWidth + marginRight + gapToAdd; // 16px gap added here
+                        }, 0);
 
-//   const addDoingDispatcher3 = () => {
-//     console.log("Added new Input : ", newInput3)
-//     dispatch(AddDone(newInput3))
-//   }
+                // Set placeholder properties for positioning
+                setPl(clientX);
+                setPlaceholderProps({
+                    clientHeight,
+                    clientWidth,
+                    clientY: parseFloat(window.getComputedStyle(parentNode).paddingTop), // Use paddingTop if needed
+                    clientX: clientX
+                });
+            }
 
-//   const handleEditClick3 = (index: string) => {
-//     setEditingIndex3(index); // Set the index of the input being edited
-//     console.log("Editing Index : ", index)
-//   };
+        }
+    };
 
-//   const handleInputChange3 = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
-//     const newTodo = e.target.value
-//     dispatch(updateDone({ id, newTodo }));
-//     console.log("ID : ", id, "New Todo : ", newTodo)
-//   };
 
-//   const handleKeyDown3 = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === 'Enter') {
-//       addDoingDispatcher3()
-//       setNewInput3('')
-//       setIsAddingNewCard3(false)
-//     }
-//   };
+    const onDragEnd = (result: DropResult) => {
+        setPlaceholderProps({
+            clientHeight: 0,
+            clientWidth: 0,
+            clientY: 0,
+            clientX: 0,
+        });
 
-//   const handleKeyDownWhenEdit3 = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === 'Enter') {
-//       setNewInput3('')
-//       setIsAddingNewCard3(false)
-//     }
-//   };
+        console.log("On DnD Func")
+        // setIsDragging(false);  old
+        const { source, destination, draggableId } = result;
+        console.log("Result : ", result);
+        console.log("Source : ", source);
+        console.log("Destination : ", destination);
+        console.log("Draggable ID : ", draggableId);
 
-//   // DRAGE AND DROP
-//   const onDragEnd = () => { }
-//   //   const { source, destination } = result;
+        // Replacing Card from Eachother
+        if (draggableId.includes("card-") && source.index !== destination?.index) {
+            const sourceIndex = source.index;
+            const destinationIndex = destination?.index;
 
-//   //   // If no destination, return early
-//   //   if (!destination) return;
+            if (destinationIndex !== undefined) {
+                console.log("Source Index : ", sourceIndex);
+                console.log("Destination Index : ", destinationIndex);
 
-//   //   // Define columns based on droppableId
-//   //   const columns = {
-//   //     'todo-column': { data: data, setData: setData },
-//   //     'doing-column': { data: data2, setData: setData2 },
-//   //     'done-column': { data: data3, setData: setData3 }
-//   //   };
+                dispatch(reorderCards({ destinationIndex, sourceIndex }));
+            } else {
+                console.error("Destination index is undefined");
+            }
+            return;
+        }
 
-//   //   const sourceColumn = columns[source.droppableId];
-//   //   const destinationColumn = columns[destination.droppableId];
+        // If there's no destination (dropped outside a droppable), exit function
+        if (!destination) return;
 
-//   //   // If dragging and dropping within the same column
-//   //   if (source.droppableId === destination.droppableId) {
-//   //     const updatedColumnData = [...sourceColumn.data];
-//   //     const [movedItem] = updatedColumnData.splice(source.index, 1);
-//   //     updatedColumnData.splice(destination.index, 0, movedItem);
-//   //     sourceColumn.setData(updatedColumnData); // Update the column
-//   //   } else {
-//   //     // If dragging between different columns
-//   //     const sourceDataCopy = [...sourceColumn.data];
-//   //     const destinationDataCopy = [...destinationColumn.data];
+        // If the item is dropped in the same position, do nothing
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-//   //     const [movedItem] = sourceDataCopy.splice(source.index, 1); // Remove item from source
-//   //     destinationDataCopy.splice(destination.index, 0, movedItem); // Add to destination
+        // Deep copy of data with new references
+        const updatedCards = data.map(card => ({
+            ...card,
+            inputs: [...card.inputs]
+        }));
+        console.log("Deep Copy : ", updatedCards)
 
-//   //     // Update both source and destination columns
-//   //     sourceColumn.setData(sourceDataCopy);
-//   //     destinationColumn.setData(destinationDataCopy);
-//   //   }
-//   // };
+        const sourceCardIndex = updatedCards.findIndex(card => `droppable${card.id}` === source.droppableId);
+        const destCardIndex = updatedCards.findIndex(card => `droppable${card.id}` === destination.droppableId);
+        console.log("Source Card Index : ", sourceCardIndex)
+        console.log("Destination Card Index : ", destCardIndex)
 
-//   return (
-//     <DndContext onDragEnd={onDragEnd}>
-//       <Droppable droppableId="all-columns" type="COLUMN" direction="horizontal">
-//         {(provided) => (
-//           <div
-//             {...provided.droppableProps}
-//             ref={provided.innerRef}
-//             className='flex lg:flex-row flex-wrap items-center md:items-baseline justify-center pt-4 md:gap-[16px]'>
-//             {/* FIRST CARD */}
-//             <Droppable key={4} droppableId={"todo-column"} type="ITEM">
-//               {(provided) => (
-//                 <div
-//                   {...provided.droppableProps}
-//                   ref={provided.innerRef}
-//                   className='bg-[#101204] w-[272px] p-[8px] rounded-2xl'>
-//                   {/* Heading and icons */}
-//                   <HeadingandIcons heading='To do' />
-//                   {/* Mapped Input Fields */}
-//                   <div className='mt-[20px] flex flex-col gap-y-[7px]'>
-//                     {todoData.map((item, index) => (
-//                       <Draggable key={index} draggableId={`draggable-column-${index}`} index={index}>
-//                         {(provided) => (
-//                           <div
-//                             {...provided.dragHandleProps}
-//                             {...provided.draggableProps}
-//                             ref={provided.innerRef}
-//                             className='relative w-[254px]'>
-//                             {editingIndex === item.id ? (
-//                               <input
-//                                 type='text'
-//                                 value={item.todo}
-//                                 onChange={(e) => handleInputChange(e, index)}
-//                                 className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-//                                 onKeyDown={(e) => handleKeyDownWhenEdit(e)}
-//                               />
-//                             ) : (
-//                               <div className='hover:ring-2 ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] w-[254px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
-//                                 {item.todo}
-//                               </div>
-//                             )}
-//                             {/* Pencil Icon */}
-//                             <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
-//                               <FiEdit2
-//                                 className='text-[#A1ACB5] hover:text-white cursor-pointer'
-//                                 onClick={() => handleEditClick(item.id)} // Enable input editing on click
-//                               />
-//                             </div>
-//                           </div>
-//                         )}
-//                       </Draggable>
-//                     ))}
-//                     {provided.placeholder}
+        if (sourceCardIndex !== -1 && destCardIndex !== -1) {
+            const [movedItem] = updatedCards[sourceCardIndex].inputs.splice(source.index, 1);
+            console.log("Moved Item : ", " Brackets : ", [movedItem])
+            updatedCards[destCardIndex].inputs.splice(destination.index, 0, movedItem);
+            console.log("Updated Cards : ", updatedCards)
 
-//                     {/* Conditionally Show New Input Field */}
-//                     {isAddingNewCard && (
-//                       <div className='relative w-[254px] mt-4'>
-//                         <input
-//                           type='text'
-//                           value={newInput}
-//                           onChange={(e) => setNewInput(e.target.value)}
-//                           onKeyDown={handleKeyDown} // Handle pressing "Enter" key
-//                           placeholder=''
-//                           className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-//                         />
-//                         {/* Pencil Icon */}
-//                         <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
-//                           <FiEdit2
-//                             className='text-[#A1ACB5] hover:text-white cursor-pointer'
-//                             onClick={handleAddNewInput} // Add new input to data array
-//                           />
-//                         </div>
-//                       </div>
-//                     )}
-//                   </div>
+            const destCardId = updatedCards[destCardIndex].id;
 
-//                   {/* Bottom */}
-//                   < div className='flex flex-row justify-between items-baseline' >
-//                     {/* Add Card Button */}
-//                     < div
-//                       className='flex flex-row items-center gap-x-[11px] mt-[20px] mb-[15px] hover:bg-gray-800 rounded-md p-2 text-[#7B868E] cursor-pointer'
-//                       onClick={() => setIsAddingNewCard(true)} // Show new input field when clicked
-//                     >
-//                       <FaPlus />
-//                       <span className='text-[14px] font-[400]'>Add a card</span>
-//                     </div>
-//                     {/* Template Icon */}
-//                     <div className='mr-[15px]'>
-//                       <FaIdCard className='text-white' />
-//                     </div>
-//                   </div>
-//                   {/* <Bottom setIsAddingNewCard={setIsAddingNewCard(true)} /> */}
-//                 </div>
-//               )}
-//             </Droppable>
+            // Dispatch the reordered array to update the Redux store
+            dispatch(reorderCardItems({
+                sourceCardId: updatedCards[sourceCardIndex].id,
+                destinationCardId: destCardId,
+                sourceIndex: source.index,
+                destinationIndex: destination.index
+            }));
+        }
+    };
 
-//             {/* SECOND CARD */}
-//             <Droppable key={4} droppableId={"doing-column"} type="ITEM">
-//               {(provided) => (
-//                 <div
-//                   {...provided.droppableProps}
-//                   ref={provided.innerRef}
-//                   className='bg-[#101204] md:mt-[60px] mt-[20px] w-[272px] p-[8px] rounded-2xl'>
-//                   {/* Heading and icons */}
-//                   <HeadingandIcons heading='Doing' />
-//                   {/* Mapped Input Fields */}
-//                   <div className='mt-[20px] flex flex-col gap-y-[7px]'>
-//                     {doingData.map((item, index) => (
-//                       <Draggable key={index} draggableId={`draggable-column-${index}`} index={index}>
-//                         {(provided) => (
-//                           <div
-//                             className="relative w-[254px]"
-//                             {...provided.dragHandleProps}
-//                             {...provided.draggableProps}
-//                           >
-//                             {editingIndex2 === item.id ? (
-//                               <input
-//                                 type='text'
-//                                 value={item.todo}
-//                                 onChange={(e) => handleInputChange2(e, index)}
-//                                 className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-//                                 onKeyDown={(e) => handleKeyDownWhenEdit2(e)}
-//                               />
-//                             ) : (
-//                               <div className='hover:ring-2 ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] w-[254px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
-//                                 {item.todo}
-//                               </div>
-//                             )}
-//                             {/* Pencil Icon */}
-//                             <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
-//                               <FiEdit2
-//                                 className='text-[#A1ACB5] hover:text-white cursor-pointer'
-//                                 onClick={() => handleEditClick2(item.id)} // Enable input editing on click
-//                               />
-//                             </div>
-//                           </div>
-//                         )}
-//                       </Draggable>
-//                     ))}
+    useEffect(() => {
+        if (isAddingNewCard && inputRef.current || editingIndex && inputRef.current || titleIndex && inputRef.current) {
+            inputRef.current.focus(); // Focus the input when InpuField becomes true
+        }
+    }, [isAddingNewCard, editingIndex, titleIndex]);
 
-//                     {/* Conditionally Show New Input Field */}
-//                     {isAddingNewCard2 && (
-//                       <div className='relative w-[254px] mt-4'>
-//                         <input
-//                           type='text'
-//                           value={newInput2}
-//                           onChange={(e) => setNewInput2(e.target.value)}
-//                           onKeyDown={handleKeyDown2} // Handle pressing "Enter" key
-//                           placeholder='Enter a title or paste a link'
-//                           className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-//                         />
-//                         {/* Pencil Icon */}
-//                         <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
-//                           <FiEdit2
-//                             className='text-[#A1ACB5] hover:text-white cursor-pointer'
-//                             onClick={handleAddNewInput2} // Add new input to data array
-//                           />
-//                         </div>
-//                       </div>
-//                     )}
-//                   </div>
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (inputRef.current && !inputRef.current.contains(event.target as Node) && titleIndex) {
+                // Dispatch action to save the title change on outside click
+                if (currentTitle.trim() === '') {
+                    //setShowInputError(false)
+                    console.log("No input")
+                    setTitleIndex(null)
+                }
+                else {
+                    dispatch(editTitle({ id: titleIndex, title: currentTitle }));
+                    setTitleIndex(null); // Reset edit mode
+                    setShowInputError(false)
+                    setCurrentTitle('')
+                }
+            }
+            else if (inputRef.current && !inputRef.current.contains(event.target as Node) && editingIndex) {
+                // Dispatch action to save the title change on outside click
+                if (currentTodo.trim() === '') {
+                    console.log("No todo")
+                    setEditingIndex(null)
+                } else {
+                    dispatch(updateCardInput({ id: editingIndex, input: currentTodo }));
+                    setEditingIndex(null); // Reset edit mode
+                    setCurrentTodo('')
+                    setIsAddingNewCard(false)
+                }
+            }
+            else if (inputRef.current && !inputRef.current.contains(event.target as Node) && isAddingNewCard && addingCardIndex) {
+                // Dispatch action to save the title change on outside click
+                if (newInput.trim() === '') {
+                    // setShowAddCardError(true)
+                    console.log("No input")
+                    setaddingCardIndex(null); // Reset edit mode
+                    setEditingIndex(null); // Reset edit mode
 
-//                   {/* Bottom */}
-//                   < div className='flex flex-row justify-between items-baseline' >
-//                     {/* Add Card Button */}
-//                     < div
-//                       className='flex flex-row items-center gap-x-[11px] mt-[20px] mb-[15px] hover:bg-gray-800 rounded-md p-2 text-[#7B868E] cursor-pointer'
-//                       onClick={() => setIsAddingNewCard2(true)} // Show new input field when clicked
-//                     >
-//                       <FaPlus />
-//                       <span className='text-[14px] font-[400]'>Add a card</span>
-//                     </div>
-//                     {/* Template Icon */}
-//                     <div className='mr-[15px]'>
-//                       <FaIdCard className='text-white' />
-//                     </div>
-//                   </div>
-//                 </div>
-//               )}
-//             </Droppable>
+                }
+                else {
+                    // setShowAddCardError(false)
+                    dispatch(addCardInput({ id: addingCardIndex, input: newInput }))
+                    setaddingCardIndex(null); // Reset edit mode
+                    setNewInput('')
+                    setIsAddingNewCard(false)
+                    setEditingIndex(null); // Reset edit mode
+                }
+            }
+        };
 
-//             {/* THIRD CARD */}
-//             <Droppable key={4} droppableId={"done-column"} type="ITEM">
-//               {(provided) => (
-//                 <div
-//                   {...provided.droppableProps} ref={provided.innerRef}
-//                   className='bg-[#101204] md:mt-[60px] mt-[20px] w-[272px] p-[8px] rounded-2xl'>
-//                   {/* Heading and icons */}
-//                   <HeadingandIcons heading='Done' />
-//                   {/* Mapped Input Fields */}
-//                   <div className='mt-[20px] flex flex-col gap-y-[7px]'>
-//                     {doneData.map((item, index) => (
-//                       <Draggable key={index} draggableId={`draggable-column-${index}`} index={index}>
-//                         {(provided) => (
-//                           <div
-//                             {...provided.dragHandleProps}
-//                             {...provided.draggableProps}
-//                             className='relative w-[254px]'>
-//                             {editingIndex3 === item.id ? (
-//                               <input
-//                                 type='text'
-//                                 value={item.todo}
-//                                 onChange={(e) => handleInputChange3(e, index)}
-//                                 className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-//                                 onKeyDown={(e) => handleKeyDownWhenEdit3(e)}
-//                               />
-//                             ) : (
-//                               <div className='hover:ring-2 ring-white pl-[13px] pr-[17px] pb-[13px] pt-[17px] w-[254px] rounded-xl bg-[#22272B] text-[#A1ACB5]'>
-//                                 {item.todo}
-//                               </div>
-//                             )}
-//                             {/* Pencil Icon */}
-//                             <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
-//                               <FiEdit2
-//                                 className='text-[#A1ACB5] hover:text-white cursor-pointer'
-//                                 onClick={() => handleEditClick3(item.id)} // Enable input editing on click
-//                               />
-//                             </div>
-//                           </div>
-//                         )}
-//                       </Draggable>
-//                     ))}
+        document.addEventListener("mousedown", handleClickOutside);
 
-//                     {/* Conditionally Show New Input Field */}
-//                     {isAddingNewCard3 && (
-//                       <div className='relative w-[254px] mt-4'>
-//                         <input
-//                           type='text'
-//                           value={newInput3}
-//                           onChange={(e) => setNewInput3(e.target.value)}
-//                           onKeyDown={handleKeyDown3} // Handle pressing "Enter" key
-//                           placeholder='Enter a title or paste a link'
-//                           className='pl-[13px] pr-[40px] pb-[13px] pt-[17px] w-full rounded-xl bg-[#22272B] text-[#A1ACB5] hover:ring-2 ring-white cursor-text'
-//                         />
-//                         {/* Pencil Icon */}
-//                         <div className='absolute top-1/2 right-[10px] transform -translate-y-1/2'>
-//                           <FiEdit2
-//                             className='text-[#A1ACB5] hover:text-white cursor-pointer'
-//                             onClick={handleAddNewInput3} // Add new input to data array
-//                           />
-//                         </div>
-//                       </div>
-//                     )}
-//                   </div>
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [titleIndex, currentTitle, dispatch, editingIndex, currentTodo, isAddingNewCard, addingCardIndex, newInput]);
 
-//                   {/* Bottom */}
-//                   < div className='flex flex-row justify-between items-baseline' >
-//                     {/* Add Card Button */}
-//                     < div
-//                       className='flex flex-row items-center gap-x-[11px] mt-[20px] mb-[15px] hover:bg-gray-800 rounded-md p-2 text-[#7B868E] cursor-pointer'
-//                       onClick={() => setIsAddingNewCard3(true)} // Show new input field when clicked
-//                     >
-//                       <FaPlus />
-//                       <span className='text-[14px] font-[400]'>Add a card</span>
-//                     </div>
-//                     {/* Template Icon */}
-//                     <div className='mr-[15px]'>
-//                       <FaIdCard className='text-white' />
-//                     </div>
-//                   </div>
-//                 </div>
-//               )}
-//             </Droppable>
-//           </div>
-//         )
-//         }
-//       </Droppable >
-//     </DndContext>
 
-//   );
-// };
+    return (
+        <DndContext
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragUpdate={onDragUpdate}
+        >
+            <ToastContainer
+                position="top-right"
+                autoClose={1000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
+            <Droppable droppableId="all-columns" type="COLUMN" direction="horizontal">
+                {
+                    (provided, snapshot) => (
+                        <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className={`relative  flex items-start justify-start pt-4`}>
+                            {
+                                data.map((item, index) => (
+                                    <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
+                                        {(provided) => (
+                                            <div
+                                                {...provided.dragHandleProps}
+                                                {...provided.draggableProps}
+                                                ref={provided.innerRef}
+                                                // key={index}
+                                                className='bg-[#101204] ml-[16px] p-[8px] min-w-[275px] max-w-[272px] rounded-2xl'
+                                            >
+                                                {/* Heading and icons */}
+                                                <div className='flex flex-row top-0 z-10 justify-between items-center mt-[4px] ml-[8px]'>
+                                                    <div className="w-2/3">
+                                                        {titleIndex === item.id ? (
+                                                            <input
+                                                                type='text'
+                                                                value={currentTitle}
+                                                                ref={inputRef} // Attach ref to the input
+                                                                style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
+                                                                onChange={(e) => handleTitleChange(e, item.id)}
+                                                                className={`pl-[13px] font-[600] break-word w-[90%] rounded-xl bg-[#101204] text-[#F4F4F4] hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
+                                                                onKeyDown={(e) => handleKeyDownTitle(e)}
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
+                                                                className='font-[600] tracking-wider break-word pl-[13px] max-w-[176px] max-h-[100px] overflow-hidden pt-1 w-full rounded-xl bg-[#101204] text-[#F4F4F4]'>
+                                                                {item.title}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className=" flex gap-x-[8px] top-1/2 right-[5px]">
+                                                        <div
+                                                            onClick={() => handleEditTitleClick(item.id, item.title)}
+                                                            className='hover:translate-y-[1px] bg-[#22272B] rounded-full p-2 transition-transform cursor-pointer'>
+                                                            <FiEdit2
+                                                                className='text-white text-[18px]'
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            onClick={() => handleDeleteCard(item.id)}
+                                                            className='hover:translate-y-[1px] bg-[#22272B] rounded-full p-2 transition-transform cursor-pointer'>
+                                                            <FiTrash
+                                                                className='text-white text-[18px]'
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Mapped Input Fields */}
+                                                <Droppable key={item.id} droppableId={`droppable${item.id}`} type="ITEM">
+                                                    {(provided) => (
+                                                        <div
+                                                            {...provided.droppableProps} ref={provided.innerRef}
+                                                            //max-w-[250px]
+                                                            className='mt-[8px] p-2 flex flex-col gap-y-[8px] max-h-[230px] overflow-y-auto'>
+                                                            {
+                                                                item.inputs.map((item, index) => (
+                                                                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                                                                        {
+                                                                            (provided) => (
+                                                                                <div
+                                                                                    key={index}
+                                                                                    draggable
+                                                                                    {...provided.dragHandleProps}
+                                                                                    {...provided.draggableProps}
+                                                                                    ref={provided.innerRef}
+                                                                                    className='relative'>
+                                                                                    {editingIndex === item.id ? (
+                                                                                        <input
+                                                                                            type='text'
+                                                                                            value={currentTodo}
+                                                                                            ref={inputRef} // Attach ref to the input
+                                                                                            onChange={(e) => handleInputChange(e, item.id)}
+                                                                                            className='py-[8px] px-[12px] w-full rounded-xl bg-[#22272B] text-[#F4F4F4] hover:ring-2 ring-white cursor-text'
+                                                                                            onKeyDown={(e) => handleKeyDownWhenEdit(e)}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <div
+                                                                                            //max-w-[230px]
+                                                                                            className='hover:ring-2 break-words ring-white py-[8px] px-[12px] rounded-xl bg-[#22272B] text-[#F4F4F4]'>
+                                                                                            {item.value}
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {/* Pencil Icon */}
+                                                                                    <div className="absolute flex gap-x-[4px] top-1/2 right-[5px]">
+                                                                                        <div
+                                                                                            onClick={() => handleEditClick(item.id, item.value)} // Enable input editing on click
+                                                                                            className=' text-[#F4F4F4] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
+                                                                                            <FiEdit2
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div
+                                                                                            onClick={() => handleDeleteInput(item.id)}
+                                                                                            className=' text-[#F4F4F4] hover:text-white bg-[#101204] hover:opacity-90 rounded-full p-[6px] cursor-pointer transition-transform -translate-y-1/2'>
+                                                                                            <FiTrash
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                    </Draggable>
+                                                                ))}
 
-// export default Hero;
+                                                            {/* Conditionally Show New Input Field */}
+                                                            {addingCardIndex === item.id && isAddingNewCard && (
+                                                                <div className='mt-4'>
+                                                                    <input
+                                                                        type='text'
+                                                                        value={newInput}
+                                                                        onChange={(e) => setNewInput(e.target.value)}
+                                                                        onKeyDown={(e) => handleKeyDown(e, item.id)} // Handle pressing "Enter" key
+                                                                        ref={inputRef} // Attach ref to the input
+                                                                        placeholder=''
+                                                                        className='py-[8px] px-[12px] w-full rounded-xl bg-[#22272B] text-[#F4F4F4]  cursor-text hover:ring-2 ring-white'
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                                {/* Bottom */}
+                                                < div className=' hover:translate-y-[1px] px-2 transition-transform bottom-0 z-10 items-baseline' >
+                                                    {/* Add Card Button */}
+                                                    < div
+                                                        className='flex flex-row items-center gap-x-[11px] my-[8px] hover:bg-[#22272B] rounded-xl p-2 text-[#7B868E] cursor-pointer'
+                                                        onClick={() => handleAddingNewCardInput(item.id)} // Show new input field when clicked
+                                                    >
+                                                        <FaPlus />
+                                                        <span className='text-[14px] font-[400]'>Add a card</span>
+                                                    </div>
 
+                                                </div>
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                            {!isEmpty(placeholderProps) && snapshot.isDraggingOver && (
+                                <div
+                                    className="absolute rounded-xl bg-black opacity-15"
+                                    style={{
+                                        // position: 'absolute',
+                                        top: 16,
+                                        left: placeholderProps.clientX,
+                                        height: placeholderProps.clientHeight,
+                                        width: placeholderProps.clientWidth,
+                                    }}
+                                />
+                            )}
+                            {snapshot.isDraggingOver && (
+                                <div className="p-[8px] mr-[16px]  w-[275px] rounded-2xl opacity-50"></div>
+                            )}
+                            {/* {provided.placeholder} */}
+                        </div>
+                    )}
+            </Droppable>
+        </DndContext >
+    )
+}
+
+export default HeroD

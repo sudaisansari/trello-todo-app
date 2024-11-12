@@ -1,12 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+/* 
 @layer base {
     html {
         @apply bg-[#8F3F66];
     }
-}
+} */
 
 .roundedAndPadding {
   @apply py-[8px] px-[12px] rounded-xl
@@ -14,23 +14,23 @@
 
 /* For WebKit browsers like Chrome, Safari */
 .your-scrollable-class::-webkit-scrollbar {
-    width: 8px; /* Adjust width as needed */
+    width: 2px; /* Adjust width as needed */
   }
   
   .your-scrollable-class::-webkit-scrollbar-track {
-    background: #22272B; /* Track color */
+    background: #6E776B; /* Track color */
   }
   
   .your-scrollable-class::-webkit-scrollbar-thumb {
-    background-color: #101204; /* Scrollbar color */
+    background-color: black; /* Scrollbar color */
     border-radius: 10px; /* Rounded corners for the scrollbar */
-    border: 2px solid #22272B; /* Optional border to create padding */
+    border: 2px solid #6E776B; /* Optional border to create padding */
   }
   
   /* For Firefox */
   .your-scrollable-class {
     scrollbar-width: thin;
-    scrollbar-color: #101204 #22272B;
+    scrollbar-color: black #6E776B;
   }
   
   

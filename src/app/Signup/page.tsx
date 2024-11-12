@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import Image from "next/image";
 // import { ToastContainer, toast } from 'react-toastify';
 // import 'react-toastify/dist/ReactToastify.css';
+import Logo from "@/components/assets/trelloo.png";
 
 
 const SignUp: React.FC = () => {
@@ -71,7 +73,7 @@ const SignUp: React.FC = () => {
   }, [router, user]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#8F3F65]">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-[#232526] to-[#414345]">
       {/* <ToastContainer
         position="bottom-right"
         autoClose={1000}
@@ -84,9 +86,10 @@ const SignUp: React.FC = () => {
         pauseOnHover
         theme="light"
       /> */}
-      <div className="mb-[50px]">
-        <h1 className="font-[700] text-[30px] lg:text-[3.125vw] text-white md:leading-[1.66666666667vw]">
-          My Trello board
+      <div className="mb-[50px] flex items-center justify-center gap-x-2">
+        <Image src={Logo} alt='Trello' width={40} height={40} />
+        <h1 className="font-[700] text-[34px] md:text-[40px] text-white md:leading-[1.66666666667vw]">
+          Trello
         </h1>
       </div>
       <div className="bg-[#101204] p-10 rounded-lg shadow-xl w-72 md:w-96">
@@ -118,20 +121,20 @@ const SignUp: React.FC = () => {
         </div>
         <button
           onClick={handleEmailSignUp}
-          className="w-full p-3 mb-4 bg-indigo-600 rounded text-white hover:bg-indigo-500"
+          className="w-full p-3 mb-4 rounded bg-[#2F83CD] text-white hover:translate-y-[1px] transition-transform"
         >
           Sign Up
         </button>
         <button
           onClick={handleGoogleSignIn}
-          className="w-full mb-4 flex items-center justify-center gap-x-2 p-3 bg-indigo-600 rounded text-white hover:bg-indigo-500"
+          className="w-full mb-4 flex items-center justify-center gap-x-2 p-3 bg-[#2F83CD] text-white hover:translate-y-[1px] transition-transform rounded"
         >
           <FcGoogle />
           Continue with Google
         </button>
         <div className="w-full p-3 rounded text-white">
           Already have an account?{" "}
-          <Link href="/SignIn" className="text-indigo-500">
+          <Link href="/SignIn" className="text-[#2F83CD]">
             Sign In
           </Link>
         </div>

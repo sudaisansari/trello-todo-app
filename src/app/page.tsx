@@ -6,15 +6,26 @@ import HeroD from "@/components/Widgets/HeroD";
 
 export default function Home() {
   return (
-    <div className="bg-[#8F3F65] h-screen flex flex-col  your-scrollable-class">
+    <div className="-[#8F3F65] -[#6E776B] bg-gradient-to-tr from-[#ff00cc] to-[#3181CD] h-screen flex flex-col your-scrollable-class">
       <FirestoreSync />
       <Header />
       {/* bg-gradient-to-tr from-primary to-secondary */}
-      <div className="flex-1 flex overflow-x-auto min-w-full">
+      <div className="flex-1 flex flex-col items-center">
         {/* Your main content area */}
-        <div className="flex w-max">
-          <HeroD />
-          <AddAnotherList />
+        {/* <AnotherList /> */}
+        <div className="relative rounded-xl mt-[32px] w-[320px] md:w-[650px] lg:w-[800px] xl:w-[1100px] py-4 md:px-4">
+          {/* Background Overlay */}
+          <div className="absolute inset-0 bg-white opacity-30 rounded-xl"></div>
+
+          {/* Main Content */}
+          <div className="flex flex-col items-center w-full justify-center relative opacity-100">
+            <div className="w-full flex justify-center">
+              <AddAnotherList />
+            </div>
+            <div className="overflow-x-auto w-full pb-4 h-[313px] md:h-[390px] lg:h-[440px]">
+              <HeroD />
+            </div>
+          </div>
         </div>
       </div>
     </div>
