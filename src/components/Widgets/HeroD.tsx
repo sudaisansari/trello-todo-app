@@ -14,6 +14,7 @@ import { isEmpty } from "lodash"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Modal from "./Modal";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 
 interface CardData {
     id: string;
@@ -65,6 +66,11 @@ const HeroD = () => {
     const cardDeleted = () => toast("Card Deleted");
     const listDeleted = () => toast("List Deleted");
     const [isDragging, setIsDragging] = useState(false)
+
+    interface Type {
+        isWatching: boolean
+    }
+    const isWatching = useSelector((state: Type) => state.isWatching);
 
 
     // Dnd
@@ -164,11 +170,11 @@ const HeroD = () => {
     };
 
 
-    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newTitle = e.target.value
         setCurrentTitle(newTitle);
         // dispatch(editTitle({ id, title: newTitle }));
-        console.log("ID : ", id, "New Todo : ", newTitle)
+        //console.log("ID : ", id, "New Todo : ", newTitle)
     };
 
     const handleKeyDownWhenEdit = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -485,6 +491,7 @@ const HeroD = () => {
     }
     const [isModalOpen, setModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+    const eye = selectedItem?.id
     const handleInputClick = (item: Item) => {
         setSelectedItem(item);  // Store the clicked item, if needed
         setModalOpen(true);     // Open the modal
@@ -536,7 +543,7 @@ const HeroD = () => {
                                                                 value={currentTitle}
                                                                 ref={inputRef} // Attach ref to the input
                                                                 style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
-                                                                onChange={(e) => handleTitleChange(e, item.id)}
+                                                                onChange={(e) => handleTitleChange(e)}
                                                                 className={`pl-[2px] pr-[6px] py-[2px] tracking-wider font-[600] break-word w-[90%] rounded-xl bg-[#E5E7EB] text-black hover:ring-2 ring-white cursor-text ${showInputError ? 'ring-2 ring-red-500' : ''}`}
                                                                 onKeyDown={(e) => handleKeyDownTitle(e)}
                                                             />
@@ -594,10 +601,19 @@ const HeroD = () => {
                                                                                             onKeyDown={(e) => handleKeyDownWhenEdit(e)}
                                                                                         />
                                                                                     ) : (
-                                                                                        <div
-                                                                                            onClick={() => handleInputClick(item)}  // Show modal on click
-                                                                                            className='hover:ring-2 tracking-wide break-words ring-black py-[8px] px-[12px] rounded-xl bg-[#6E776B] text-[#F4F4F4]'>
-                                                                                            {item.value}
+                                                                                        <div>
+                                                                                            <div
+                                                                                                onClick={() => handleInputClick(item)}  // Show modal on click
+                                                                                                className='hover:ring-2 tracking-wide break-words ring-black py-[8px] px-[12px] rounded-xl bg-[#6E776B] text-[#F4F4F4]'>
+                                                                                                {item.value}
+                                                                                                <span>
+                                                                                                    {isWatching && item.id === eye && (  // Replace `specificItemId` with your condition
+                                                                                                        <div>
+                                                                                                            <MdOutlineRemoveRedEye className="text-black" />
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                </span>
+                                                                                            </div>
                                                                                         </div>
                                                                                     )}
                                                                                     {/* Pencil Icon */}

@@ -73,7 +73,7 @@ const SignUp: React.FC = () => {
   }, [router, user]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-[#232526] to-[#414345]">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-[#ff00cc] to-[#3181CD]">
       {/* <ToastContainer
         position="bottom-right"
         autoClose={1000}
@@ -92,7 +92,7 @@ const SignUp: React.FC = () => {
           Trello
         </h1>
       </div>
-      <div className="bg-[#101204] p-10 rounded-lg shadow-xl w-72 md:w-96">
+      <div className="bg-[#9E89DC] p-10 rounded-lg shadow-xl w-72 md:w-96">
         <h1 className="text-white text-2xl mb-5">Sign Up</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>} {/* Display error message */}
         <input

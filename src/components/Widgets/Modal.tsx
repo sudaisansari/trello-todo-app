@@ -1,7 +1,7 @@
 "use client"
 import { RxActivityLog, RxCross1 } from "react-icons/rx";
 import { useState, useEffect, useRef } from "react";
-import { addDescription, deleteActivity, updateCardInput } from "@/app/redux/slice";
+import { deleteActivity, toggleWatching, updateCardInput } from "@/app/redux/slice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { RootState } from "../shared/types";
@@ -9,9 +9,9 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { FaCheck, FaTable } from "react-icons/fa";
 import { ImParagraphLeft } from "react-icons/im";
 import { useUserAuth } from "../context/AuthContext";
-import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
-import RichText from "./Richtext";
+import RichText from "./RichtextActivity";
+import RichTextDesc from "./RichTextDesc";
 
 interface Item {
   id: string;
@@ -32,16 +32,44 @@ interface ModalProps {
   Item: Item | null;
 }
 
+interface Type {
+  isWatching: boolean
+}
+
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
   const dispatch = useDispatch();
   const [editingTitle, setEditingTitle] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const data = useSelector((state: RootState) => state.cardsArray || []);
-  const [isWatching, setIsWatching] = useState(false)
+  //const [isWatching, setIsWatching] = useState(false)
   const { user } = useUserAuth()
   const [isDesRichText, setIsDesRichText] = useState(false)
   const [isRichTextComp, setIsRichTextComp] = useState(false)
   const [isEditActivity, setIsEditActivity] = useState<string | null>(null);
+  const isWatching = useSelector((state: Type ) => state.isWatching);
+  const [deletePopup, setDeletePopup] = useState<null | string>(null); // Track which activity's delete popup is active
+
+  const watchingClick = () => {
+    //setIsWatching(prevState => !prevState); // Toggle between true and false
+    dispatch(toggleWatching());
+  };
+
+  const openDeletePopup = (id: string) => setDeletePopup(id);
+  const closeDeletePopup = () => setDeletePopup(null);
+
+  const confirmDelete = (id: string) => {
+    handldDeleteActivity(id); // Call the delete handler
+    setDeletePopup(null); // Close the popup
+  };
+
+
+  const enableRichTextDesc = () => {
+    setIsDesRichText(true)
+  }
+
+  const closeRichTextDesc = () => {
+    setIsDesRichText(false)
+  }
 
   const closeUpdateRichText = () => {
     setIsEditActivity(null)
@@ -65,65 +93,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
     setIsRichTextComp(false)
   }
 
-  // Rich Text Description
-  const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
-  const [content, setContent] = useState<string | undefined>('');
-
-
-  const handleEditorChange = (newContent: string) => {
-    console.log("s", newContent)
-    const cont = newContent.concat(" ")
-    setContent(cont);
-    //setContent("sudais")
-  };
-
-  const handleCancel = () => {
-    setIsDesRichText(false); // Hide the rich text editor
-  };
-
-  const enableRichText = (desc: string | undefined) => {
-    console.log("Rich Text Area")
-    setContent(desc)
-    setIsDesRichText(true); // Toggle between true and false
-  };
-
-  const handleSubmit = () => {
-    const desc = content
-    const id = Item?.id
-    console.log("Desc ", desc, id)
-    dispatch(addDescription({ id: id, description: desc }))
-    setContent('');
-    setIsDesRichText(false);
-  };
-
-  const quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, 4, 5, false] }],
-      ['bold', 'italic', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['link', 'image'],
-    ],
-  };
-
-  const quillFormats = [
-    'header',
-    'bold',
-    'italic',
-    'strike',
-    'list',
-    'bullet',
-    'link',
-    'image',
-  ];
-
-  //
   const email = user?.email;
   const emailName = email?.split("@")[0].split(".")[0];
   const initialCharacter = emailName ? emailName.charAt(0).toUpperCase() : "";
-
-  const watchingClick = () => {
-    setIsWatching(prevState => !prevState); // Toggle between true and false
-  };
 
   const card = data.find(card =>
     card.inputs.some(inputItem => inputItem.id === Item?.id)
@@ -200,7 +172,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
 
       {/* Modal Content */}
       {/* Task title, List name, and Close Button */}
-      <div className="bg-[#E5E7EB] h-[500px] overflow-y-auto my-[42px] w-[768px] p-5 rounded-xl z-10">
+      <div className="bg-[#E5E7EB] h-[500px] w-full lg:w-[768px] overflow-y-auto my-[42px] lg:mx-0 mx-2 md:mx-8 p-2 md:p-5 rounded-xl z-10">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-x-3">
             <div>
@@ -258,41 +230,33 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
 
         {/* Description */}
         <div className="mt-[26px]">
-          <div className="flex items-center gap-x-3">
-            <ImParagraphLeft className="text-[16px]" />
-            <h2 className="text-[16px] font-[700]">Description</h2>
+          <div className="flex justify-between w-auto md:w-[512px]">
+            <div className="flex items-center gap-x-3">
+              <ImParagraphLeft className="text-[16px]" />
+              <h2 className="text-[16px] font-[700]">Description</h2>
+            </div>
+            {!isDesRichText ? (
+              <button
+                onClick={enableRichTextDesc}
+                //className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400">
+                className='cursor-pointer text-[16px] font-[500] w-max flex flex-row px-3 py-2 bg-[#6E776B] text-black hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
+                Edit
+              </button>
+            ) : (
+              <div></div>
+            )}
           </div>
 
           {!isDesRichText ? (
             <div
-              onClick={() => enableRichText(itemData?.description)}
-              className="h-[60px] ml-[28px] w-[512px] mt-[12px] rounded-md text-[16px] p-2 cursor-pointer hover:bg-[#747972] bg-[#6E776B]"
+              onClick={enableRichTextDesc}
+              className="h-[60px] ml-[28px] w-auto md:w-[512px] mt-[12px] rounded-md text-[16px] p-2 cursor-pointer hover:bg-[#747972] bg-[#6E776B]"
               dangerouslySetInnerHTML={{
                 __html: itemData?.description || "Add a more detailed description..."
               }}
             ></div>
           ) : (
-            <div className="ml-[28px] mt-[12px]">
-              <div
-                className=" w-[508px] rounded-md mt-[12px]"
-              >
-                <QuillEditor
-                  value={content}
-                  onChange={handleEditorChange}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  className=" bg-[#6E776B]"
-                />
-              </div>
-              <div className="flex gap-x-2 mt-3">
-                <button onClick={handleCancel} className="p-2 bg-red-500 text-white rounded-md">
-                  Cancel
-                </button>
-                <button onClick={handleSubmit} className="p-2 bg-blue-500 text-white rounded-md">
-                  Save
-                </button>
-              </div>
-            </div>
+            <RichTextDesc Id={itemData?.id} handleClose={closeRichTextDesc} initialContent={itemData?.description} />
           )}
         </div>
 
@@ -315,7 +279,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
               {!isRichTextComp ? (
                 <div
                   onClick={enableRichTextActivity}
-                  className="h-[36px] w-[502px] rounded-md text-[16px] pl-2 pt-1 font-[500] cursor-pointer hover:bg-[#747972] bg-[#6E776B]">
+                  className="h-[36px] w-full md:w-[502px] rounded-md text-[16px] pl-2 pt-1 font-[500] cursor-pointer hover:bg-[#747972] bg-[#6E776B]">
                   Write a comment...
                 </div>
               ) : (
@@ -352,17 +316,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
                           dangerouslySetInnerHTML={{
                             __html: item.content,
                           }}
-                          className="min-h-[36px] w-[502px] rounded-md text-[16px] pl-2 pt-1 hover:bg-[#747972] bg-[#6E776B]"
+                          className="min-h-[36px] w-full md:w-[502px] rounded-md text-[16px] pl-2 pt-1 hover:bg-[#747972] bg-[#6E776B]"
                         ></div>
                       )}
                     </div>
                   </div>
-                  {/* <div className="flex ml-[48px] gap-x-2">
-                    <button
-                      onClick={() => handleEditActivity(item.id, item.content)}
-                      className="text-[12px] font-[500] hover:underline">Edit</button>
-                    <button className="text-[12px] font-[500] hover:underline">Delete</button>
-                  </div> */}
                   {isEditActivity === item.id ? (
                     <div></div>
                   ) : (
@@ -371,8 +329,31 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
                         onClick={() => handleEditActivity(item.id, item.content)}
                         className="text-[12px] font-[500] hover:underline">Edit</button>
                       <button
-                        onClick={() => handldDeleteActivity(item.id)}
+                        //onClick={() => handldDeleteActivity(item.id)}
+                        onClick={() => openDeletePopup(item.id)}
                         className="text-[12px] font-[500] hover:underline">Delete</button>
+                    </div>
+                  )}
+                  {/* Delete Confirmation Popup */}
+                  {deletePopup === item.id && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="bg-white p-4 rounded-md shadow-md w-[300px]">
+                        <p className="text-[14px] font-[500] text-center">
+                          Are you sure you want to delete this activity?
+                        </p>
+                        <div className="flex justify-center mt-4 gap-x-2">
+                          <button
+                            onClick={() => confirmDelete(item.id)}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                            Delete
+                          </button>
+                          <button
+                            onClick={closeDeletePopup}
+                            className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

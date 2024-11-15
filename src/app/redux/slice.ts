@@ -1,14 +1,5 @@
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit"
 
-// interface Cards {
-//     id: string;
-//     title: string;
-//     inputs: {
-//         id: string;
-//         value: string;
-//     }[];
-// }
-
 interface Cards {
     id: string;
     title: string;
@@ -25,15 +16,24 @@ interface Cards {
     }[];
 }
 
+interface InitialState {
+    cardsArray: Cards[];
+    isWatching: boolean; // Global state for toggling
+}
 
-const initialState: { cardsArray: Cards[] } = {
-    cardsArray: []
+const initialState: InitialState = {
+    cardsArray: [],
+    isWatching: false,
 }
 
 const Slice = createSlice({
     name: "addUserSlice",
     initialState,
     reducers: {
+        toggleWatching: (state) => {
+            // Toggles the isWatching state
+            state.isWatching = !state.isWatching;
+        },
         addNewInput: (state, action) => {
             console.log("Action of New Input:", action.payload);
             const { category, value } = action.payload;
@@ -194,6 +194,35 @@ const Slice = createSlice({
                 console.error("Card containing the specified input ID not found.");
             }
         },
+        updateDescription: (state, action) => {
+            console.log("Updating Description");
+            const { id, description } = action.payload; // Extract the input ID and the updated description from the action payload.
+            console.log("ID:", id, "Updated Description:", description);
+
+            // Find the card that contains the input with the specified ID.
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem => inputItem.id === id)
+            );
+
+            if (card) {
+                console.log("Found Card:", card);
+
+                // Find the specific input within the card by ID and update its description.
+                const inputToUpdate = card.inputs.find(inputItem => inputItem.id === id);
+
+                if (inputToUpdate) {
+                    inputToUpdate.description = description; // Update the description.
+                    console.log("Description Updated:", inputToUpdate.description);
+                } else {
+                    console.error("Input with the specified ID not found in the card.");
+                }
+            } else {
+                console.error("Card containing the specified input ID not found.");
+            }
+        },
+
+
+
         addActivity: (state, action) => {
             console.log("Adding Activity")
             const { id, activity } = action.payload;
@@ -363,5 +392,5 @@ const Slice = createSlice({
     }
 })
 
-export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity } = Slice.actions
+export const { toggleWatching, addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity, updateDescription } = Slice.actions
 export default Slice.reducer
