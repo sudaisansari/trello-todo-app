@@ -13,12 +13,41 @@ import { useUserAuth } from "../context/AuthContext";
 import { isEmpty } from "lodash"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Modal from "./Modal";
 
 interface CardData {
     id: string;
     title: string;
-    inputs: Array<{ id: string; value: string }>; // Adjust based on the structure of your data
+    inputs: Array<{
+        id: string;
+        value: string;
+        description: string;
+        dateTime: string;
+        // Stores HTML content as a string
+        activity: {
+            id: string; // Unique identifier for each activity entry
+            content: string; // Stores rich text as HTML string
+            dateTime: string; // Timestamp for activity
+        }[];
+    }>; // Adjust based on the structure of your data
 }
+
+// interface CardData {
+//     id: string;
+//     title: string;
+//     inputs: {
+//         id: string;
+//         value: string;
+//         description: string; // Stores HTML content as a string
+//         activity: {
+//             id: string; // Unique identifier for each activity entry
+//             content: string; // Stores rich text as HTML string
+//             dateTime: string; // Timestamp for activity
+//         }[];
+//         dateTime: string; // Date and time for the input creation or last update
+//     }[];
+// }
+
 const HeroD = () => {
     const data = useSelector((state: RootState) => state.cardsArray || []);
     const [newInput, setNewInput] = useState(''); // State for new input
@@ -442,6 +471,26 @@ const HeroD = () => {
     }, [titleIndex, currentTitle, dispatch, editingIndex, currentTodo, isAddingNewCard, addingCardIndex, newInput]);
 
 
+    interface Item {
+        id: string;
+        value: string;
+        description?: string;
+        dateTime?: string;
+        // Stores HTML content as a string
+        activity?: {
+            id: string; // Unique identifier for each activity entry
+            content: string; // Stores rich text as HTML string
+            dateTime: string; // Timestamp for activity
+        }[];
+    }
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+    const handleInputClick = (item: Item) => {
+        setSelectedItem(item);  // Store the clicked item, if needed
+        setModalOpen(true);     // Open the modal
+    };
+    const closeModal = () => setModalOpen(false);
+
     return (
         <DndContext
             onDragStart={onDragStart}
@@ -546,7 +595,7 @@ const HeroD = () => {
                                                                                         />
                                                                                     ) : (
                                                                                         <div
-                                                                                            //max-w-[230px]
+                                                                                            onClick={() => handleInputClick(item)}  // Show modal on click
                                                                                             className='hover:ring-2 tracking-wide break-words ring-black py-[8px] px-[12px] rounded-xl bg-[#6E776B] text-[#F4F4F4]'>
                                                                                             {item.value}
                                                                                         </div>
@@ -584,7 +633,7 @@ const HeroD = () => {
                                                                         ref={inputRef} // Attach ref to the input
                                                                         placeholder=''
                                                                         className='py-[8px] px-[12px] tracking-wide w-full rounded-xl bg-[#6E776B] text-[#F4F4F4] hover:ring-2 ring-white cursor-text'
-                                                                        />
+                                                                    />
                                                                 </div>
                                                             )}
                                                             {provided.placeholder}
@@ -627,7 +676,9 @@ const HeroD = () => {
                         </div>
                     )}
             </Droppable>
-        </DndContext >
+            {/* Modal Component */}
+            <Modal isOpen={isModalOpen} onClose={closeModal} Item={selectedItem} />
+        </DndContext>
     )
 }
 

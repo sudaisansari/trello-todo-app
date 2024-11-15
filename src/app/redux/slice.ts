@@ -1,9 +1,13 @@
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit"
 
-interface Todo {
-    id: string;
-    todo: string;
-}
+// interface Cards {
+//     id: string;
+//     title: string;
+//     inputs: {
+//         id: string;
+//         value: string;
+//     }[];
+// }
 
 interface Cards {
     id: string;
@@ -11,25 +15,19 @@ interface Cards {
     inputs: {
         id: string;
         value: string;
+        description: string; // Stores HTML content as a string
+        activity: {
+            id: string; // Unique identifier for each activity entry
+            content: string; // Stores rich text as HTML string
+            dateTime: string; // Timestamp for activity
+        }[];
+        dateTime: string; // Date and time for the input creation or last update
     }[];
 }
 
 
-const initialState: { todos: Todo[], doing: Todo[], done: Todo[], cardsArray: Cards[] } = {
-    todos: [
-        {
-            id: nanoid(),
-            todo: "Todo 1"
-        },
-        {
-            id: nanoid(),
-            todo: "Todo 2"
-        }
-
-    ]
-    , doing: []
-    , done: []
-    , cardsArray: []
+const initialState: { cardsArray: Cards[] } = {
+    cardsArray: []
 }
 
 const Slice = createSlice({
@@ -41,7 +39,18 @@ const Slice = createSlice({
             const { category, value } = action.payload;
             const inputdata = {
                 id: nanoid(),
-                value: value
+                value: value,
+                description: "",
+                activity: [],
+                dateTime: new Date().toLocaleString('en-US', {
+                    timeZone: 'Asia/Karachi',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                })
             }
             console.log("Category : ", category, "New Input : ", value, "in Slice")
             state.cardsArray.find((item) => (item.title === category))?.inputs.push(inputdata)
@@ -100,10 +109,22 @@ const Slice = createSlice({
             if (card) {
                 const inputdata = {
                     id: nanoid(),
-                    value: input
+                    value: input,
+                    description: "",
+                    activity: [],
+                    // dateTime: new Date()  
+                    dateTime: new Date().toLocaleString('en-US', {
+                        timeZone: 'Asia/Karachi',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true
+                    })
                 };
                 card.inputs.push(inputdata); // Push the new input into the card’s inputs
-                console.log("Todo Updated : ", input);
+                console.log("Todo Updated : ", inputdata);
             } else {
                 console.error("Card with specified ID not found.");
             }
@@ -148,9 +169,142 @@ const Slice = createSlice({
         editTitle: (state, action) => {
             console.log("Editing Title")
             const { id, title } = action.payload;
-            console.log("ID : ", id, "New Todo : ", title, "in Slice", )
+            console.log("ID : ", id, "New Todo : ", title, "in Slice",)
             state.cardsArray.find((item) => (item.id === id))!.title = title
         },
+        addDescription: (state, action) => {
+            console.log("Adding Description")
+            const { id, description } = action.payload;
+            console.log("ID : ", id, "New Description : ", description, "in Slice",)
+
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem => inputItem.id === id)
+            );
+
+            if (card) {
+                // Find the specific input within the card by ID and update its value
+                const descToAdd = card.inputs.find(inputItem => inputItem.id === id);
+                if (descToAdd) {
+                    descToAdd.description = description;
+                    console.log("Todo Updated:", description);
+                } else {
+                    console.error("Input with specified ID not found in the card.");
+                }
+            } else {
+                console.error("Card containing the specified input ID not found.");
+            }
+        },
+        addActivity: (state, action) => {
+            console.log("Adding Activity")
+            const { id, activity } = action.payload;
+            console.log("ID : ", id, "New Activity : ", activity, "in Slice",)
+
+            const data = {
+                id: nanoid(),
+                content: activity,
+                dateTime: new Date().toLocaleString('en-US', {
+                    timeZone: 'Asia/Karachi',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                })
+            }
+
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem => inputItem.id === id)
+            );
+
+            if (card) {
+                // Find the specific input within the card by ID and update its value
+                const activityToAdd = card.inputs.find(inputItem => inputItem.id === id);
+                if (activityToAdd) {
+                    activityToAdd.activity.push(data);
+                    console.log("Activity Updated:", data);
+                } else {
+                    console.error("Input with specified ID not found in the card.");
+                }
+            } else {
+                console.error("Card containing the specified input ID not found.");
+            }
+        },
+        updateActivity: (state, action) => {
+            console.log("Editing Activity");
+            const { id, activity } = action.payload; // `id` is the activity's ID, and `activity` is the new content.
+            console.log("ID:", id, "New Activity:", activity);
+
+            // Find the card that contains the activity with the given `id`.
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem =>
+                    inputItem.activity.some(activityItem => activityItem.id === id)
+                )
+            );
+
+            if (card) {
+                console.log("Found Card:", card);
+
+                // Find the input that contains the activity.
+                const inputWithActivity = card.inputs.find(inputItem =>
+                    inputItem.activity.some(activityItem => activityItem.id === id)
+                );
+
+                if (inputWithActivity) {
+                    // Find the specific activity by its ID and update its content.
+                    const activityToEdit = inputWithActivity.activity.find(activityItem => activityItem.id === id);
+
+                    if (activityToEdit) {
+                        activityToEdit.content = activity; // Update the content of the activity.
+                        console.log("Activity Updated:", activityToEdit);
+                    } else {
+                        console.error("Activity with specified ID not found.");
+                    }
+                } else {
+                    console.error("Input with specified activity ID not found.");
+                }
+            } else {
+                console.error("Card containing the specified activity ID not found.");
+            }
+        },
+        deleteActivity: (state, action) => {
+            console.log("Deleting Activity");
+            const id = action.payload; // `id` is the activity's ID.
+            console.log("ID to Delete:", id);
+
+            // Find the card that contains the activity with the given `id`.
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem =>
+                    inputItem.activity.some(activityItem => activityItem.id === id)
+                )
+            );
+
+            if (card) {
+                console.log("Found Card:", card);
+
+                // Find the input that contains the activity.
+                const inputWithActivity = card.inputs.find(inputItem =>
+                    inputItem.activity.some(activityItem => activityItem.id === id)
+                );
+
+                if (inputWithActivity) {
+                    // Find the specific activity by its ID and remove it.
+                    const activityIndex = inputWithActivity.activity.findIndex(activityItem => activityItem.id === id);
+
+                    if (activityIndex !== -1) {
+                        inputWithActivity.activity.splice(activityIndex, 1); // Remove the activity.
+                        console.log("Activity Deleted");
+                    } else {
+                        console.error("Activity with specified ID not found.");
+                    }
+                } else {
+                    console.error("Input with specified activity ID not found.");
+                }
+            } else {
+                console.error("Card containing the specified activity ID not found.");
+            }
+        },
+
 
         reorderCardItems: (state, action: PayloadAction<{ sourceCardId: string, destinationCardId: string, sourceIndex: number, destinationIndex: number }>) => {
             const { sourceCardId, destinationCardId, sourceIndex, destinationIndex } = action.payload;
@@ -206,65 +360,8 @@ const Slice = createSlice({
             state.cardsArray.splice(destinationIndex, 0, movedCard);
             console.log("Card Updated  : ", movedCard);
         },
-
-
-
-
-        // 
-        // AddTodo: (state, action) => {
-        //     console.log("Action : ", action.payload)
-        //     const tododata = {
-        //         id: nanoid(),
-        //         todo: action.payload
-        //     }
-        //     state.todos.push(tododata)
-        // },
-        // updateTodo: (state, action) => {
-        //     console.log("Updating Todo")
-        //     const { id, newTodo } = action.payload;
-        //     console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
-        //     if (id >= 0) {
-        //         state.todos[id].todo = newTodo;
-        //         console.log("Todo Updated : ", newTodo)
-        //     }
-        // },
-        // AddDoing: (state, action) => {
-        //     console.log("Action : ", action.payload)
-        //     const Doingdata = {
-        //         id: nanoid(),
-        //         todo: action.payload
-        //     }
-        //     state.doing.push(Doingdata)
-        // },
-        // updateDoing: (state, action) => {
-        //     console.log("Updating Todo")
-        //     const { id, newTodo } = action.payload;
-        //     console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
-        //     if (id >= 0) {
-        //         state.doing[id].todo = newTodo;
-        //         console.log("Todo Updated : ", newTodo)
-        //     }
-        // },
-        // AddDone: (state, action) => {
-        //     console.log("Action : ", action.payload)
-        //     const doneData = {
-        //         id: nanoid(),
-        //         todo: action.payload
-        //     }
-        //     state.done.push(doneData)
-        // },
-        // updateDone: (state, action) => {
-        //     console.log("Updating Todo")
-        //     const { id, newTodo } = action.payload;
-        //     console.log("ID : ", id, "New Todo : ", newTodo, "in Slice")
-        //     if (id >= 0) {
-        //         state.done[id].todo = newTodo;
-        //         console.log("Todo Updated : ", newTodo)
-        //     }
-        // },
-
     }
 })
 
-export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle } = Slice.actions
+export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity } = Slice.actions
 export default Slice.reducer

@@ -28,11 +28,31 @@
 
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/firebase";
+
+
+// interface CardData {
+//   id: string;
+//   title: string;
+//   inputs: Array<{ id: string; value: string }>; // Adjust based on the structure of your data
+// }
+
 interface CardData {
+  id: string;
+  title: string;
+  inputs: Array<{
     id: string;
-    title: string;
-    inputs: Array<{ id: string; value: string }>; // Adjust based on the structure of your data
-  }
+    value: string;
+    description: string;
+    dateTime: string;
+    // Stores HTML content as a string
+    activity: {
+      id: string; // Unique identifier for each activity entry
+      content: string; // Stores rich text as HTML string
+      dateTime: string; // Timestamp for activity
+    }[];
+  }>; // Adjust based on the structure of your data
+}
+
 export const subscribeToUserData = (userId: string, callback: (data: CardData[]) => void) => {
   const userRef = doc(db, "users", userId);
 
