@@ -24,6 +24,7 @@ interface CardData {
         value: string;
         description: string;
         dateTime: string;
+        watching: boolean;
         // Stores HTML content as a string
         activity: {
             id: string; // Unique identifier for each activity entry
@@ -33,21 +34,6 @@ interface CardData {
     }>; // Adjust based on the structure of your data
 }
 
-// interface CardData {
-//     id: string;
-//     title: string;
-//     inputs: {
-//         id: string;
-//         value: string;
-//         description: string; // Stores HTML content as a string
-//         activity: {
-//             id: string; // Unique identifier for each activity entry
-//             content: string; // Stores rich text as HTML string
-//             dateTime: string; // Timestamp for activity
-//         }[];
-//         dateTime: string; // Date and time for the input creation or last update
-//     }[];
-// }
 
 const HeroD = () => {
     const data = useSelector((state: RootState) => state.cardsArray || []);
@@ -66,12 +52,6 @@ const HeroD = () => {
     const cardDeleted = () => toast("Card Deleted");
     const listDeleted = () => toast("List Deleted");
     const [isDragging, setIsDragging] = useState(false)
-
-    interface Type {
-        isWatching: boolean
-    }
-    const isWatching = useSelector((state: Type) => state.isWatching);
-
 
     // Dnd
     interface PH {
@@ -103,11 +83,11 @@ const HeroD = () => {
     console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
     console.log("Redux Data : ", data)
 
-    const handleEditClick = (id: string, todo: string) => {
-        setEditingIndex(id); // Set the index of the input being edited
-        setCurrentTodo(todo)
-        console.log("Editing Index : ", id)
-    };
+    // const handleEditClick = (id: string, todo: string) => {
+    //     setEditingIndex(id); // Set the index of the input being edited
+    //     setCurrentTodo(todo)
+    //     console.log("Editing Index : ", id)
+    // };
 
     const handleDeleteInput = (id: string) => {
         cardDeleted()
@@ -482,6 +462,7 @@ const HeroD = () => {
         value: string;
         description?: string;
         dateTime?: string;
+        watching: boolean;
         // Stores HTML content as a string
         activity?: {
             id: string; // Unique identifier for each activity entry
@@ -491,7 +472,6 @@ const HeroD = () => {
     }
     const [isModalOpen, setModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-    const eye = selectedItem?.id
     const handleInputClick = (item: Item) => {
         setSelectedItem(item);  // Store the clicked item, if needed
         setModalOpen(true);     // Open the modal
@@ -607,7 +587,7 @@ const HeroD = () => {
                                                                                                 className='hover:ring-2 tracking-wide break-words ring-black py-[8px] px-[12px] rounded-xl bg-[#6E776B] text-[#F4F4F4]'>
                                                                                                 {item.value}
                                                                                                 <span>
-                                                                                                    {isWatching && item.id === eye && (  // Replace `specificItemId` with your condition
+                                                                                                    {item.watching && (  // Replace `specificItemId` with your condition
                                                                                                         <div>
                                                                                                             <MdOutlineRemoveRedEye className="text-black" />
                                                                                                         </div>
@@ -618,13 +598,13 @@ const HeroD = () => {
                                                                                     )}
                                                                                     {/* Pencil Icon */}
                                                                                     <div className="absolute flex gap-x-[px] top-1/2 right-[5px]">
-                                                                                        <div
+                                                                                        {/* <div
                                                                                             onClick={() => handleEditClick(item.id, item.value)} // Enable input editing on click
                                                                                             className=' text-black bg-[#6E776B] hover:opacity-90 rounded-full p-[3px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiEdit2
                                                                                                 className="text-[18px]"
                                                                                             />
-                                                                                        </div>
+                                                                                        </div> */}
                                                                                         <div
                                                                                             onClick={() => handleDeleteInput(item.id)}
                                                                                             className=' text-black bg-[#6E776B] hover:opacity-90 rounded-full p-[3px] cursor-pointer transition-transform -translate-y-1/2'>

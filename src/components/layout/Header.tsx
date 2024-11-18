@@ -2,8 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { addNewInput, setCardsData } from '@/app/redux/slice'
 import { useDispatch } from "react-redux"
-// import { useSelector } from 'react-redux';
-// import { RootState } from '../shared/types';
 import { useUserAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { subscribeToUserData } from '../shared/fetchFirestoreData';
@@ -29,16 +27,21 @@ const Header = () => {
   const router = useRouter()
   const { user } = useUserAuth(); // To get the logged-in user
   const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
-  // const titles = cardsArray.map((item) => (item.title))
-  const titles = data.map((item) => (item.title))
+
+  const transformedData = data.map((item) => ({
+    id: item.id,
+    title: item.title
+  }));
+  const titles = data.map((item) => (item.id))
   const [category, setCategory] = useState<string>(titles[0] || ''); // Dropdown selection
   console.log("Cat : ", category)
 
+
   const email = user?.email
   const emailName = email?.split("@")[0].split(".")[0];
-  console.log("Email Name : ", emailName)
-  const userName = user?.displayName;
-  const firstName = userName?.split(" ")[0];
+  // console.log("Email Name : ", emailName)
+  //const userName = user?.displayName;
+  //const firstName = userName?.split(" ")[0];
   const [isUserOpen, setIsUserOpen] = useState(false);
   const popupRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
   const [isUserOpenL, setIsUserOpenL] = useState(false);
@@ -46,6 +49,7 @@ const Header = () => {
   const [isUserOpenM, setIsUserOpenM] = useState(false);
   const popupRefM = useRef<HTMLInputElement>(null); // Add a ref for the input field
 
+  const initialCharacter = emailName ? emailName.charAt(0).toUpperCase() : "";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -102,16 +106,33 @@ const Header = () => {
     }
   };
 
+  // const handleAdd = () => {
+  //   if (input.trim() === '') {
+  //     setShowInputError(true); // Show ring if input is empty
+  //     return;
+  //   }
+  //   setShowInputError(false); // Remove ring if input is valid
+  //   console.log("Categ : ", category, " Input : ", input)
+  //   dispatch(addNewInput({ category, value: input }));
+  //   setInput(''); // Clear input after adding
+  // };
+
   const handleAdd = () => {
     if (input.trim() === '') {
-      setShowInputError(true); // Show ring if input is empty
+      setShowInputError(true); // Show error for empty input
       return;
     }
-    setShowInputError(false); // Remove ring if input is valid
-    console.log("Categ : ", category, " Input : ", input)
-    dispatch(addNewInput({ category, value: input }));
+    setShowInputError(false); // Clear error
+
+    if (!category) {
+      console.error("No category selected");
+      return;
+    }
+    console.log("ID:", category, "Input:", input);
+    dispatch(addNewInput({ id: category, value: input }));
     setInput(''); // Clear input after adding
   };
+
 
   return (
     <div>
@@ -138,16 +159,19 @@ const Header = () => {
               {/* Dropdown Menu */}
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  setCategory(selectedId);
+                }}
                 className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
               >
                 {
-                  titles.map((item, index) => (
+                  transformedData.map((item) => (
                     <option
-                      key={index}
-                      value={item}
+                      key={item.id}
+                      value={item.id}
                       className='bg-white text-[16px] text-black  text-start'>
-                      {item.length > 7 ? `${item.slice(0, 6)}..` : item}
+                      {item.title.length > 7 ? `${item.title.slice(0, 6)}..` : item.title}
                     </option>
                   ))
                 }
@@ -166,23 +190,30 @@ const Header = () => {
             ref={popupRefL}
             className="relative">
             {/* Main Button */}
-            < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
+            {/* < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
               <button onClick={togglePopupL} className="text-black text-[16px] font-[500]">
                 Hey {firstName ? firstName : emailName}
               </button>
+            </div> */}
+            <div
+              onClick={togglePopupL}
+              className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
+              <span className="text-black font-[500]">
+                {initialCharacter ? initialCharacter : "A"}
+              </span>
             </div>
             {/* Popup */}
             {isUserOpenL && (
               <div
-                className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg px-4 py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
+                className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg  py-1 z-20 transition-all duration-500 ease-in-out transform opacity-100"
               // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
               //onClick={(e) => e.stopPropagation()} // Prevent event bubbling
               >
-                <p className="text-md font-semibold">{email || "No email available"}</p>
+                <p className="text-md px-3 py-1 hover:bg-[#6E776B] font-semibold">{email || "No email available"}</p>
                 <Link href="/Signup">
                   <button
                     onClick={handleSignOut}
-                    className="text-md font-semibold hover:translate-y-[1px] transition-transform"
+                    className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
                   >
                     Log Out
                   </button>
@@ -207,22 +238,29 @@ const Header = () => {
               ref={popupRefM}
               className="relative">
               {/* Main Button */}
-              < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
+              {/* < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
                 <button onClick={togglePopupM} className="text-black text-[16px] font-[500]">
                   Hey {firstName ? firstName : emailName}
                 </button>
+              </div> */}
+              <div
+                onClick={togglePopupM}
+                className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
+                <span className="text-black font-[500]">
+                  {initialCharacter ? initialCharacter : "A"}
+                </span>
               </div>
               {/* Popup */}
               {isUserOpenM && (
                 <div
-                  className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg px-4 py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
+                  className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
                 // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
                 >
-                  <p className="text-md font-semibold">{email || "No email available"}</p>
+                  <p className="text-md px-3 font-semibold">{email || "No email available"}</p>
                   <Link href="/Signup">
                     <button
                       onClick={handleSignOut}
-                      className="text-md font-semibold hover:translate-y-[1px] transition-transform"
+                      className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
                     >
                       Log Out
                     </button>
@@ -246,16 +284,18 @@ const Header = () => {
               {/* Dropdown Menu */}
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  setCategory(selectedId);
+                }} className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
               >
                 {
-                  titles.map((item, index) => (
+                  transformedData.map((item) => (
                     <option
-                      key={index}
-                      value={item}
+                      key={item.id}
+                      value={item.id}
                       className='bg-white text-[16px] text-black  text-start'>
-                      {item.length > 7 ? `${item.slice(0, 6)}..` : item}
+                      {item.title.length > 7 ? `${item.title.slice(0, 6)}..` : item.title}
                     </option>
                   ))
                 }
@@ -286,22 +326,29 @@ const Header = () => {
             ref={popupRef}
             className="relative">
             {/* Main Button */}
-            < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-ce' >
+            {/* < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-ce' >
               <button onClick={togglePopup} className="text-black text-[14px] font-[500]">
                 Hey {firstName ? firstName : emailName}
               </button>
+            </div> */}
+            <div
+              onClick={togglePopup}
+              className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
+              <span className="text-black font-[500]">
+                {initialCharacter ? initialCharacter : "A"}
+              </span>
             </div>
             {/* Popup */}
             {isUserOpen && (
               <div
-                className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg px-4 py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
+                className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg py-1 z-20 transition-all duration-500 ease-in-out transform opacity-100"
               // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
               >
-                <p className="text-md font-semibold">{email || "No email available"}</p>
+                <p className="text-sm px-3 font-semibold">{email || "No email available"}</p>
                 <Link href="/Signup">
                   <button
                     onClick={handleSignOut}
-                    className="text-md font-semibold hover:translate-y-[1px] transition-transform"
+                    className="text-sm px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
                   >
                     Log Out
                   </button>
@@ -325,16 +372,18 @@ const Header = () => {
             {/* Dropdown Menu */}
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                setCategory(selectedId);
+              }} className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
             >
               {
-                titles.map((item, index) => (
+                transformedData.map((item) => (
                   <option
-                    key={index}
-                    value={item}
+                    key={item.id}
+                    value={item.id}
                     className='bg-white text-[14px] text-black  text-start'>
-                    {item.length > 7 ? `${item.slice(0, 6)}..` : item}
+                    {item.title.length > 7 ? `${item.title.slice(0, 6)}..` : item.title}
                   </option>
                 ))
               }
@@ -342,13 +391,11 @@ const Header = () => {
 
             {/* Add Button */}
             < div className='cursor-pointer px-2 py-1  bg-[#E5E7EB] hover:translate-y-[1px] transition-transform rounded-xl w-max' >
-              <Link href={"/Signup"}>
               <button
                 onClick={handleAdd}
                 className='text-[14px] text-black font-[500]'>
                 Add Task
               </button>
-              </Link>
             </div>
           </div>
         </div>

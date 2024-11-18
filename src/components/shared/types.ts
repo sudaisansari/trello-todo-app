@@ -2,6 +2,7 @@ type CardInput = {
     id: string;
     value: string;
     description: string;
+    watching: boolean;
     activity: {
         id: string; // Unique identifier for each activity entry
         content: string; // Stores rich text as HTML string

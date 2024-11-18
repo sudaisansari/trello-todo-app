@@ -6,42 +6,38 @@ interface Cards {
     inputs: {
         id: string;
         value: string;
-        description: string; // Stores HTML content as a string
+        description: string;
+        dateTime: string; 
+        watching: boolean;
         activity: {
-            id: string; // Unique identifier for each activity entry
-            content: string; // Stores rich text as HTML string
-            dateTime: string; // Timestamp for activity
+            id: string; 
+            content: string; 
+            dateTime: string; 
         }[];
-        dateTime: string; // Date and time for the input creation or last update
     }[];
 }
 
 interface InitialState {
     cardsArray: Cards[];
-    isWatching: boolean; // Global state for toggling
 }
 
 const initialState: InitialState = {
     cardsArray: [],
-    isWatching: false,
 }
 
 const Slice = createSlice({
     name: "addUserSlice",
     initialState,
     reducers: {
-        toggleWatching: (state) => {
-            // Toggles the isWatching state
-            state.isWatching = !state.isWatching;
-        },
         addNewInput: (state, action) => {
             console.log("Action of New Input:", action.payload);
-            const { category, value } = action.payload;
+            const { id, value } = action.payload;
             const inputdata = {
                 id: nanoid(),
                 value: value,
                 description: "",
                 activity: [],
+                watching: false,
                 dateTime: new Date().toLocaleString('en-US', {
                     timeZone: 'Asia/Karachi',
                     year: 'numeric',
@@ -52,8 +48,8 @@ const Slice = createSlice({
                     hour12: true
                 })
             }
-            console.log("Category : ", category, "New Input : ", value, "in Slice")
-            state.cardsArray.find((item) => (item.title === category))?.inputs.push(inputdata)
+            console.log("Category : ", id, "New Input : ", value, "in Slice")
+            state.cardsArray.find((item) => (item.id === id))?.inputs.push(inputdata)
             console.log("Input Updated : ", state.cardsArray)
         },
         addNewCard: (state, action) => {
@@ -112,7 +108,7 @@ const Slice = createSlice({
                     value: input,
                     description: "",
                     activity: [],
-                    // dateTime: new Date()  
+                    watching: false,
                     dateTime: new Date().toLocaleString('en-US', {
                         timeZone: 'Asia/Karachi',
                         year: 'numeric',
@@ -187,6 +183,28 @@ const Slice = createSlice({
                 if (descToAdd) {
                     descToAdd.description = description;
                     console.log("Todo Updated:", description);
+                } else {
+                    console.error("Input with specified ID not found in the card.");
+                }
+            } else {
+                console.error("Card containing the specified input ID not found.");
+            }
+        },
+        addWatchingState: (state, action) => {
+            console.log("Adding Watching State")
+            const { id, watching } = action.payload;
+            //console.log("ID : ", id, "New Watching : ", watching, "in Slice",)
+
+            const card = state.cardsArray.find(card =>
+                card.inputs.some(inputItem => inputItem.id === id)
+            );
+
+            if (card) {
+                // Find the specific input within the card by ID and update its value
+                const watchToAdd = card.inputs.find(inputItem => inputItem.id === id);
+                if (watchToAdd) {
+                    watchToAdd.watching = watching;
+                    console.log("Todo Updated:",);
                 } else {
                     console.error("Input with specified ID not found in the card.");
                 }
@@ -392,5 +410,5 @@ const Slice = createSlice({
     }
 })
 
-export const { toggleWatching, addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity, updateDescription } = Slice.actions
+export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity, updateDescription, addWatchingState } = Slice.actions
 export default Slice.reducer

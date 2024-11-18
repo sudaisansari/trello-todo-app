@@ -1,7 +1,7 @@
 "use client"
 import { RxActivityLog, RxCross1 } from "react-icons/rx";
 import { useState, useEffect, useRef } from "react";
-import { deleteActivity, toggleWatching, updateCardInput } from "@/app/redux/slice";
+import { addWatchingState, deleteActivity, updateCardInput } from "@/app/redux/slice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { RootState } from "../shared/types";
@@ -10,14 +10,15 @@ import { FaCheck, FaTable } from "react-icons/fa";
 import { ImParagraphLeft } from "react-icons/im";
 import { useUserAuth } from "../context/AuthContext";
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
-import RichText from "./RichtextActivity";
-import RichTextDesc from "./RichTextDesc";
+import RichText from "../shared/RichtextActivity";
+import RichTextDesc from "../shared/RichTextDesc";
 
 interface Item {
   id: string;
   value: string;
   description?: string;
   dateTime?: string;
+  watching: boolean;
   // Stores HTML content as a string
   activity?: {
     id: string; // Unique identifier for each activity entry
@@ -32,26 +33,22 @@ interface ModalProps {
   Item: Item | null;
 }
 
-interface Type {
-  isWatching: boolean
-}
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
   const dispatch = useDispatch();
   const [editingTitle, setEditingTitle] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const data = useSelector((state: RootState) => state.cardsArray || []);
-  //const [isWatching, setIsWatching] = useState(false)
+  const [isWatching, setIsWatching] = useState(false)
   const { user } = useUserAuth()
   const [isDesRichText, setIsDesRichText] = useState(false)
   const [isRichTextComp, setIsRichTextComp] = useState(false)
   const [isEditActivity, setIsEditActivity] = useState<string | null>(null);
-  const isWatching = useSelector((state: Type ) => state.isWatching);
   const [deletePopup, setDeletePopup] = useState<null | string>(null); // Track which activity's delete popup is active
 
   const watchingClick = () => {
-    //setIsWatching(prevState => !prevState); // Toggle between true and false
-    dispatch(toggleWatching());
+    setIsWatching(prevState => !prevState); // Toggle between true and false
+    dispatch(addWatchingState({ id: Item?.id, watching: isWatching }))
   };
 
   const openDeletePopup = (id: string) => setDeletePopup(id);
@@ -173,8 +170,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
       {/* Modal Content */}
       {/* Task title, List name, and Close Button */}
       <div className="bg-[#E5E7EB] h-[500px] w-full lg:w-[768px] overflow-y-auto my-[42px] lg:mx-0 mx-2 md:mx-8 px-2 md:px-5 rounded-xl z-10">
-      <div className="bg-[#E5E7EB] sticky top-0 h-2 md:h-5"></div>
-        
+        <div className="bg-[#E5E7EB] sticky top-0 h-2 md:h-5"></div>
+
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-x-3">
             <div>
@@ -223,7 +220,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
             >
               <MdOutlineRemoveRedEye className='text-[18px]' />
               <span className='text-[16px] font-[500]'>Watching</span>
-              {isWatching &&
+              {itemData?.watching &&
                 <FaCheck />
               }
             </div>

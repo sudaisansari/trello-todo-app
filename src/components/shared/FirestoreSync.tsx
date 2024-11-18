@@ -9,27 +9,11 @@ import { RootState } from "./types";
 const FirestoreSync = () => {
   const { user } = useUserAuth();
   const cardsArray = useSelector((state: RootState) => state.cardsArray || []);
-  const isInitialLoad = cardsArray.length === 0; // Check if Redux state is initial
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (user && isInitialLoad) { // Only fetch if user is signed in and Redux has initial state
-  //       const userRef = doc(db, "users", user.uid);
-  //       const docSnap = await getDoc(userRef);
-  //       console.log("User ID : ", user.uid, "Cards Array : ", cardsArray)
-  //       if (docSnap.exists()) {
-  //         const data = docSnap.data();
-  //         console.log("User ID : ", user.uid, "Cards Array : ", data)
-  //         dispatch(setCardsData(data.cardsArray)); // Populate Redux with Firestore data
-  //       }
-  //     }
-  //   };
-  //   fetchData();
-  // }, [user, isInitialLoad, dispatch, cardsArray, logOut]);
+  //const isInitialLoad = cardsArray.length === 0; // Check if Redux state is initial
 
   useEffect(() => {
     const updateFirestore = () => {
-      if (user && !isInitialLoad) { // Only sync to Firestore if data is loaded and modified
+      if (user) { // Only sync to Firestore if data is loaded and modified
         try {
           const userRef = doc(db, "users", user.uid);
           setDoc(userRef, { cardsArray }, { merge: true });
@@ -39,7 +23,7 @@ const FirestoreSync = () => {
       }
     };
     updateFirestore();
-  }, [cardsArray, user, isInitialLoad]);
+  }, [cardsArray, user]);
 
   return null;
 };
