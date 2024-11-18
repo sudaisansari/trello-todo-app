@@ -30,7 +30,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const result = await signInWithPopup(auth, provider);
     const token = await result.user.getIdToken();
     setUser(result.user);
-
     nookies.set(undefined, "authToken", token, { path: "/" });
   };
 

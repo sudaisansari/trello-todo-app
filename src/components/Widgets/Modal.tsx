@@ -172,7 +172,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
 
       {/* Modal Content */}
       {/* Task title, List name, and Close Button */}
-      <div className="bg-[#E5E7EB] h-[500px] w-full lg:w-[768px] overflow-y-auto my-[42px] lg:mx-0 mx-2 md:mx-8 p-2 md:p-5 rounded-xl z-10">
+      <div className="bg-[#E5E7EB] h-[500px] w-full lg:w-[768px] overflow-y-auto my-[42px] lg:mx-0 mx-2 md:mx-8 px-2 md:px-5 rounded-xl z-10">
+      <div className="bg-[#E5E7EB] sticky top-0 h-2 md:h-5"></div>
+        
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-x-3">
             <div>
@@ -220,7 +222,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
             //onClick={submitInput} // Show new input field when clicked
             >
               <MdOutlineRemoveRedEye className='text-[18px]' />
-              <span className='text-[16px] font-[500]'>Add List</span>
+              <span className='text-[16px] font-[500]'>Watching</span>
               {isWatching &&
                 <FaCheck />
               }
@@ -380,6 +382,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
             </div>
           </div>
         </div>
+        <div className="bg-[#E5E7EB] sticky bottom-0 h-2 md:h-5"></div>
       </div>
     </div >
   );

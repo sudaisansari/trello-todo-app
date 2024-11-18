@@ -11,6 +11,7 @@ import { RootState } from '../shared/types';
 import { useSelector } from 'react-redux';
 import Image from 'next/image';
 import Logo from "@/components/assets/trelloo.png"
+import Link from 'next/link';
 
 
 interface CardData {
@@ -33,31 +34,46 @@ const Header = () => {
   const [category, setCategory] = useState<string>(titles[0] || ''); // Dropdown selection
   console.log("Cat : ", category)
 
-  const popupRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
   const email = user?.email
   const emailName = email?.split("@")[0].split(".")[0];
   console.log("Email Name : ", emailName)
   const userName = user?.displayName;
   const firstName = userName?.split(" ")[0];
   const [isUserOpen, setIsUserOpen] = useState(false);
+  const popupRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
+  const [isUserOpenL, setIsUserOpenL] = useState(false);
+  const popupRefL = useRef<HTMLInputElement>(null); // Add a ref for the input field
+  const [isUserOpenM, setIsUserOpenM] = useState(false);
+  const popupRefM = useRef<HTMLInputElement>(null); // Add a ref for the input field
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isUserOpen && popupRef.current && !popupRef.current.contains(event.target as Node)) {
         setIsUserOpen(false);
+      } else if (isUserOpenL && popupRefL.current && !popupRefL.current.contains(event.target as Node)) {
+        setIsUserOpenL(false);
+      } else if (isUserOpenM && popupRefM.current && !popupRefM.current.contains(event.target as Node)) {
+        setIsUserOpenM(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isUserOpen]); // Depend only on isUserOpen
+  }, [isUserOpen, isUserOpenL, isUserOpenM]); // Depend only on isUserOpen
 
   const togglePopup = () => {
     setIsUserOpen((prev) => !prev);
   };
 
+  const togglePopupL = () => {
+    setIsUserOpenL((prev) => !prev);
+  };
+
+  const togglePopupM = () => {
+    setIsUserOpenM((prev) => !prev);
+  };
 
   useEffect(() => {
     if (user) {
@@ -74,6 +90,7 @@ const Header = () => {
   }, [titles, category]);
 
   const handleSignOut = () => {
+    console.log("Called")
     try {
       console.log("Logging Out")
       logOut();
@@ -146,27 +163,30 @@ const Header = () => {
             </div>
           </div>
           <div
-            ref={popupRef}
+            ref={popupRefL}
             className="relative">
             {/* Main Button */}
             < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
-              <button onClick={togglePopup} className="text-black text-[16px] font-[500]">
+              <button onClick={togglePopupL} className="text-black text-[16px] font-[500]">
                 Hey {firstName ? firstName : emailName}
               </button>
             </div>
             {/* Popup */}
-            {isUserOpen && (
+            {isUserOpenL && (
               <div
                 className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg px-4 py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
               // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
+              //onClick={(e) => e.stopPropagation()} // Prevent event bubbling
               >
                 <p className="text-md font-semibold">{email || "No email available"}</p>
-                <button
-                  onClick={handleSignOut}
-                  className="text-md font-semibold hover:translate-y-[1px] transition-transform"
-                >
-                  Log Out
-                </button>
+                <Link href="/Signup">
+                  <button
+                    onClick={handleSignOut}
+                    className="text-md font-semibold hover:translate-y-[1px] transition-transform"
+                  >
+                    Log Out
+                  </button>
+                </Link>
               </div>
             )}
           </div>
@@ -184,27 +204,29 @@ const Header = () => {
               <h1 className='font-[700] text-[20px] md:text-[30px] text-[#F4F4F4] md:leading-[1.66666666667vw]'>Trello</h1>
             </div>
             <div
-              ref={popupRef}
+              ref={popupRefM}
               className="relative">
               {/* Main Button */}
               < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
-                <button onClick={togglePopup} className="text-black text-[16px] font-[500]">
+                <button onClick={togglePopupM} className="text-black text-[16px] font-[500]">
                   Hey {firstName ? firstName : emailName}
                 </button>
               </div>
               {/* Popup */}
-              {isUserOpen && (
+              {isUserOpenM && (
                 <div
                   className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg px-4 py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
                 // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
                 >
                   <p className="text-md font-semibold">{email || "No email available"}</p>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-md font-semibold hover:translate-y-[1px] transition-transform"
-                  >
-                    Log Out
-                  </button>
+                  <Link href="/Signup">
+                    <button
+                      onClick={handleSignOut}
+                      className="text-md font-semibold hover:translate-y-[1px] transition-transform"
+                    >
+                      Log Out
+                    </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -276,12 +298,14 @@ const Header = () => {
               // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
               >
                 <p className="text-md font-semibold">{email || "No email available"}</p>
-                <button
-                  onClick={handleSignOut}
-                  className="text-md font-semibold hover:translate-y-[1px] transition-transform"
-                >
-                  Log Out
-                </button>
+                <Link href="/Signup">
+                  <button
+                    onClick={handleSignOut}
+                    className="text-md font-semibold hover:translate-y-[1px] transition-transform"
+                  >
+                    Log Out
+                  </button>
+                </Link>
               </div>
             )}
           </div>
@@ -315,14 +339,16 @@ const Header = () => {
                 ))
               }
             </select>
-            
+
             {/* Add Button */}
             < div className='cursor-pointer px-2 py-1  bg-[#E5E7EB] hover:translate-y-[1px] transition-transform rounded-xl w-max' >
+              <Link href={"/Signup"}>
               <button
                 onClick={handleAdd}
                 className='text-[14px] text-black font-[500]'>
                 Add Task
               </button>
+              </Link>
             </div>
           </div>
         </div>
