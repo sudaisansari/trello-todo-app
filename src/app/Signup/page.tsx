@@ -6,9 +6,10 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Image from "next/image";
-// import { ToastContainer, toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Logo from "@/components/assets/trelloo.png";
+import { TailSpin } from "react-loader-spinner";
 
 
 const SignUp: React.FC = () => {
@@ -18,6 +19,8 @@ const SignUp: React.FC = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Track loading state
+
   // const userSignUp = () => toast("Signed Up Successfully");
 
   const togglePasswordVisibility = () => {
@@ -25,12 +28,15 @@ const SignUp: React.FC = () => {
   };
 
   const handleEmailSignUp = async () => {
+    setIsLoading(true);
     setError(""); // Clear previous error
     try {
       await emailSignUp(email, password);
+      toast.success("Signed in successfully!");
       router.push("/");
-    } catch (error: unknown) { // Use unknown type here
+    } catch (error: any) {
       // Check if error is a FirebaseError or cast it to a known type
+      toast.error(error.message || "Invalid email or password.");
       if (error instanceof Error) {
         if (error.message.includes("email-already-in-use")) {
           setError("This email is already signed up.");
@@ -41,14 +47,18 @@ const SignUp: React.FC = () => {
         console.error("Sign up error:", error); // Log unexpected error
         setError("An error occurred. Please try again.");
       }
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
   const handleGoogleSignIn = async () => {
     try {
       await googleSignIn();
+      toast.success("Signed in with Google successfully!");
       router.push("/");
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign in with Google.")
       console.log(error);
     }
   };
@@ -74,18 +84,7 @@ const SignUp: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-[#ff00cc] to-[#3181CD]">
-      {/* <ToastContainer
-        position="bottom-right"
-        autoClose={1000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      /> */}
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="mb-[50px] flex items-center justify-center gap-x-2">
         <Image src={Logo} alt='Trello' width={40} height={40} />
         <h1 className="font-[700] text-[34px] md:text-[40px] text-white md:leading-[1.66666666667vw]">
@@ -122,8 +121,15 @@ const SignUp: React.FC = () => {
         <button
           onClick={handleEmailSignUp}
           className="w-full p-3 mb-4 rounded bg-[#2F83CD] text-white hover:translate-y-[1px] transition-transform"
+          disabled={isLoading} // Disable button when loading
         >
-          Sign Up
+          {isLoading ? (
+            <div className="flex justify-center">
+              <TailSpin height="20" width="20" color="white" />
+            </div>
+          ) : (
+            "Sign Up"
+          )}
         </button>
         <button
           onClick={handleGoogleSignIn}

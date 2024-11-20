@@ -7,19 +7,48 @@ interface Cards {
         id: string;
         value: string;
         description: string;
-        dateTime: string; 
+        dateTime: string;
         watching: boolean;
         activity: {
-            id: string; 
-            content: string; 
-            dateTime: string; 
+            id: string;
+            content: string;
+            dateTime: string;
         }[];
     }[];
 }
 
+// interface CardData {
+//     cardsArray: Cards[];
+//     email: string;
+//     name: string;
+// }
+
 interface InitialState {
     cardsArray: Cards[];
 }
+
+// {
+//     id: "324",
+//     title: "Todo",
+//     inputs: [
+//         {
+//             id: nanoid(),
+//             value: "Task 1",
+//             description: "",
+//             activity: [],
+//             watching: false,
+//             dateTime: new Date().toLocaleString('en-US', {
+//                 timeZone: 'Asia/Karachi',
+//                 year: 'numeric',
+//                 month: 'short',
+//                 day: 'numeric',
+//                 hour: 'numeric',
+//                 minute: 'numeric',
+//                 hour12: true
+//             })
+//         }
+//     ]
+// }
 
 const initialState: InitialState = {
     cardsArray: [],

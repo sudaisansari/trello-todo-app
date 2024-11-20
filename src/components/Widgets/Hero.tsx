@@ -95,8 +95,8 @@ const HeroD = () => {
     }
 
     const handleDeleteCard = (id: string) => {
-        listDeleted()
         dispatch(deleteCard(id))
+        listDeleted()
     }
 
     const handleAddingNewCardInput = (id: string) => {
@@ -502,7 +502,7 @@ const HeroD = () => {
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className={`relative  flex items-start justify-start pt-4`}>
+                            className={`overflow-x-auto h-[326px] md:h-[386px] lg:h-[436px] relative flex items-start justify-start pt-4`}>
                             {
                                 data.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
@@ -549,7 +549,7 @@ const HeroD = () => {
                                                             <FiTrash
                                                                 className='text-black text-[20px]'
                                                             />
-                                                        </div>
+                                                        </div>                                                        
                                                     </div>
                                                 </div>
                                                 {/* Mapped Input Fields */}

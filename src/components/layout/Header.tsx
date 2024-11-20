@@ -34,7 +34,7 @@ const Header = () => {
   }));
   const titles = data.map((item) => (item.id))
   const [category, setCategory] = useState<string>(titles[0] || ''); // Dropdown selection
-  console.log("Cat : ", category)
+  //console.log("Cat : ", category)
 
 
   const email = user?.email
@@ -256,7 +256,7 @@ const Header = () => {
                   className="absolute top-full mt-1 right-0 w-auto bg-[#F4F4F4] text-black rounded-lg shadow-lg py-2 z-20 transition-all duration-500 ease-in-out transform opacity-100"
                 // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
                 >
-                  <p className="text-md px-3 font-semibold">{email || "No email available"}</p>
+                  <p className="text-md hover:bg-[#6E776B] py-1 px-3 font-semibold">{email || "No email available"}</p>
                   <Link href="/Signup">
                     <button
                       onClick={handleSignOut}

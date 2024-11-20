@@ -52,6 +52,7 @@ const HeroD = () => {
     const cardDeleted = () => toast("Card Deleted");
     const listDeleted = () => toast("List Deleted");
     const [isDragging, setIsDragging] = useState(false)
+    const oneItem = useSelector((state: RootState) => state.cardsArray.length === 1);
 
     // Dnd
     interface PH {
@@ -64,13 +65,6 @@ const HeroD = () => {
     const queryAttr = "data-rbd-drag-handle-draggable-id";
     const [pl, setPl] = useState<number>()
 
-
-    // useEffect(() => {
-    //     if (user) {
-    //         const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
-    //         return () => unsubscribe(); // Unsubscribe when the component unmounts
-    //     }
-    // }, [user]);
     useEffect(() => {
         if (user) {
             const unsubscribe = subscribeToUserData(user.uid, (cardsArray) => {
@@ -89,14 +83,41 @@ const HeroD = () => {
     //     console.log("Editing Index : ", id)
     // };
 
+    const [isDeletingI, setIsDeletingI] = useState<null | string>(null)
     const handleDeleteInput = (id: string) => {
-        cardDeleted()
-        dispatch(deleteCardInput(id))
+        setIsDeletingI(id)
+        if (!oneItem) {
+            try {
+                dispatch(deleteCardInput(id))
+            } catch (error) {
+                console.log("Er Del card ", error)
+            }
+            finally {
+                setTimeout(() => {
+                    setIsDeleting(null); // Reset the deleting state after 1 second
+                    cardDeleted()
+                }, 300);
+            }
+        }
     }
 
+
+    const [isDeleting, setIsDeleting] = useState<null | string>(null)
     const handleDeleteCard = (id: string) => {
-        listDeleted()
-        dispatch(deleteCard(id))
+        setIsDeleting(id)
+        if (!oneItem) {
+            try {
+                dispatch(deleteCard(id))
+            } catch (error) {
+                console.log("Er Del card ", error)
+            }
+            finally {
+                setTimeout(() => {
+                    setIsDeleting(null); // Reset the deleting state after 1 second
+                    listDeleted(); // Call the listDeleted function
+                }, 300);
+            }
+        }
     }
 
     const handleAddingNewCardInput = (id: string) => {
@@ -401,6 +422,7 @@ const HeroD = () => {
         }
     }, [isAddingNewCard, editingIndex, titleIndex]);
 
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (inputRef.current && !inputRef.current.contains(event.target as Node) && titleIndex) {
@@ -457,6 +479,7 @@ const HeroD = () => {
     }, [titleIndex, currentTitle, dispatch, editingIndex, currentTodo, isAddingNewCard, addingCardIndex, newInput]);
 
 
+    // Modal
     interface Item {
         id: string;
         value: string;
@@ -477,6 +500,7 @@ const HeroD = () => {
         setModalOpen(true);     // Open the modal
     };
     const closeModal = () => setModalOpen(false);
+
 
     return (
         <DndContext
@@ -502,7 +526,7 @@ const HeroD = () => {
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className={`relative  flex items-start justify-start pt-4`}>
+                            className={`overflow-x-auto h-[326px] md:h-[386px] lg:h-[436px] relative flex items-start justify-start pt-4`}>
                             {
                                 data.map((item, index) => (
                                     <Draggable key={item.id} draggableId={`card-${item.id}`} index={index}>
@@ -543,13 +567,15 @@ const HeroD = () => {
                                                                 className='text-black text-[20px]'
                                                             />
                                                         </div>
-                                                        <div
+                                                        <button
+                                                            //onClick={() => handleDeleteCard(item.id)}
                                                             onClick={() => handleDeleteCard(item.id)}
+                                                            disabled={isDeleting === item.id} // Disable if the card is being deleted
                                                             className='hover:translate-y-[1px] transition-transform cursor-pointer'>
                                                             <FiTrash
                                                                 className='text-black text-[20px]'
                                                             />
-                                                        </div>
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 {/* Mapped Input Fields */}
@@ -605,14 +631,14 @@ const HeroD = () => {
                                                                                                 className="text-[18px]"
                                                                                             />
                                                                                         </div> */}
-                                                                                        <div
+                                                                                        <button
                                                                                             onClick={() => handleDeleteInput(item.id)}
+                                                                                            disabled={isDeletingI === item.id}
                                                                                             className=' text-black bg-[#6E776B] hover:opacity-90 rounded-full p-[3px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiTrash
                                                                                                 className="text-[18px]"
                                                                                             />
-                                                                                        </div>
-                                                                                    </div>
+                                                                                        </button>                                                                                                                                                                            </div>
                                                                                 </div>
                                                                             )}
                                                                     </Draggable>
@@ -669,12 +695,19 @@ const HeroD = () => {
                             )} */}
 
                             {/* {provided.placeholder} */}
+
                         </div>
                     )}
             </Droppable>
             {/* Modal Component */}
+            {/* <Deletepopup
+                isOpen={deletePopup !== null}
+                itemTitle={title}
+                onConfirm={() => confirmDelete(deletePopup!)}
+                onCancel={closeDeletePopup} */}
+            {/* /> */}
             <Modal isOpen={isModalOpen} onClose={closeModal} Item={selectedItem} />
-        </DndContext>
+        </DndContext >
     )
 }
 
