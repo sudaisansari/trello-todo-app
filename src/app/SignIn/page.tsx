@@ -169,6 +169,7 @@ import Image from "next/image";
 import { TailSpin } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FirebaseError } from "firebase/app";
 
 const SignIn: React.FC = () => {
   const { user, googleSignIn, emailSignIn } = useUserAuth();
@@ -188,10 +189,12 @@ const SignIn: React.FC = () => {
       await emailSignIn(email, password);
       toast.success("Signed in successfully!");
       router.push("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Show Firebase error in toast
-      toast.error(error.message || "Invalid email or password.");
-      console.error(error);
+      if (error instanceof FirebaseError) {
+        toast.error(error.message || "Invalid email or password.");
+        console.error(error);
+      }      
     } finally {
       setIsLoading(false);
     }
@@ -208,9 +211,12 @@ const SignIn: React.FC = () => {
       await googleSignIn();
       toast.success("Signed in with Google successfully!");
       router.push("/");
-    } catch (error:any) {
-      toast.error(error.message || "Failed to sign in with Google.");
-      console.error(error);
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        toast.error(error.message || "Failed to sign in with Google.");
+        console.error(error);
+      }
+      //toast.error(error.message || "Failed to sign in with Google.");
     }
   };
 

@@ -10,6 +10,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Logo from "@/components/assets/trelloo.png";
 import { TailSpin } from "react-loader-spinner";
+import { FirebaseError } from "firebase/app";
 
 
 const SignUp: React.FC = () => {
@@ -34,9 +35,11 @@ const SignUp: React.FC = () => {
       await emailSignUp(email, password);
       toast.success("Signed in successfully!");
       router.push("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Check if error is a FirebaseError or cast it to a known type
-      toast.error(error.message || "Invalid email or password.");
+      if (error instanceof FirebaseError) {
+        toast.error(error.message || "Invalid email or password.");
+      }
       if (error instanceof Error) {
         if (error.message.includes("email-already-in-use")) {
           setError("This email is already signed up.");
@@ -57,9 +60,11 @@ const SignUp: React.FC = () => {
       await googleSignIn();
       toast.success("Signed in with Google successfully!");
       router.push("/");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign in with Google.")
-      console.log(error);
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        toast.error(error.message || "Failed to sign in with Google.")
+        console.log(error);
+      }
     }
   };
 
