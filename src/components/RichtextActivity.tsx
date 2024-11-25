@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 import { useDispatch } from 'react-redux';
-import { addActivity, updateActivity } from '@/app/redux/slice';
+import { addActivity, updateActivity } from '@/redux/slice';
 
 const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
 

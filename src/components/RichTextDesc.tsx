@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import { useDispatch } from "react-redux";
-import { addDescription, updateDescription } from "@/app/redux/slice";
+import { addDescription, updateDescription } from "@/redux/slice";
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -55,6 +55,7 @@ const RichTextDesc: React.FC<ModalProps> = ({ handleClose, Id, initialContent })
   }, [Id, content, dispatch, handleClose, initialContent]);
 
   const handleEditorChange = (newContent: string) => {
+    console.log("Content changed:", newContent)
     setContent(newContent);
   };
 

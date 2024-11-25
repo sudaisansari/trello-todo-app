@@ -3,18 +3,19 @@ import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { FiEdit2, FiTrash } from "react-icons/fi";
 import { useSelector } from "react-redux";
-import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, setCardsData, updateCardInput } from "@/app/redux/slice";
+import { addCardInput, deleteCard, deleteCardInput, editTitle, reorderCardItems, reorderCards, setCardsData, updateCardInput } from "@/redux/slice";
 import { useDispatch } from "react-redux";
 import { Draggable, DragStart, DragUpdate, Droppable, DropResult } from "react-beautiful-dnd";
-import { DndContext } from "@/components/context/Dndcontext";
-import { RootState } from "@/components/shared/types";
-import { subscribeToUserData } from "@/components/shared/fetchFirestoreData";
+import { DndContext } from "@/context/Dndcontext";
+import { RootState } from "@/types/types";
+import { fetchDataFromFirebase } from "@/config/firebase";
 import { useUserAuth } from "../context/AuthContext";
 import { isEmpty } from "lodash"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Modal from "./Modal";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+
 
 interface CardData {
     id: string;
@@ -34,7 +35,6 @@ interface CardData {
     }>; // Adjust based on the structure of your data
 }
 
-
 const HeroD = () => {
     const data = useSelector((state: RootState) => state.cardsArray || []);
     const [newInput, setNewInput] = useState(''); // State for new input
@@ -48,10 +48,16 @@ const HeroD = () => {
     const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
     const dispatch = useDispatch();
     const { user } = useUserAuth(); // To get the logged-in user
-    const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
+    //const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
     const cardDeleted = () => toast("Card Deleted");
     const listDeleted = () => toast("List Deleted");
     const [isDragging, setIsDragging] = useState(false)
+    const [oneItem, setOneItem] = useState(data.length === 1);
+
+    useEffect(() => {
+        setOneItem(data.length === 1)
+        console.log("one it ", oneItem)
+    }, [data.length]);
 
     // Dnd
     interface PH {
@@ -64,39 +70,57 @@ const HeroD = () => {
     const queryAttr = "data-rbd-drag-handle-draggable-id";
     const [pl, setPl] = useState<number>()
 
-
-    // useEffect(() => {
-    //     if (user) {
-    //         const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
-    //         return () => unsubscribe(); // Unsubscribe when the component unmounts
-    //     }
-    // }, [user]);
     useEffect(() => {
         if (user) {
-            const unsubscribe = subscribeToUserData(user.uid, (cardsArray) => {
-                setCardsArray(cardsArray); // Update local state if needed
-                dispatch(setCardsData(cardsArray)); // Update Redux state
+            const firestoreData = fetchDataFromFirebase(user.uid, (cardsArray: CardData[]) => {
+                //dispatch(setCardsData(cardsArray)); // Update Redux state
+                if (JSON.stringify(cardsArray) !== JSON.stringify(data)) {
+                    console.log("Firestore data : ", cardsArray)
+                    dispatch(setCardsData(cardsArray));
+                }
             });
-            return () => unsubscribe(); // Clean up listener on unmount
+            return () => firestoreData(); // Clean up listener on unmount
         }
-    }, [user, dispatch]);
-    console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
-    console.log("Redux Data : ", data)
+    }, [user]);
+    console.log("Redux data : ", data)
 
-    // const handleEditClick = (id: string, todo: string) => {
-    //     setEditingIndex(id); // Set the index of the input being edited
-    //     setCurrentTodo(todo)
-    //     console.log("Editing Index : ", id)
-    // };
 
+    const [isDeletingI, setIsDeletingI] = useState<null | string>(null)
     const handleDeleteInput = (id: string) => {
-        cardDeleted()
-        dispatch(deleteCardInput(id))
+        setIsDeletingI(id)
+        try {
+            dispatch(deleteCardInput(id))
+        } catch (error) {
+            console.log("Er Del card ", error)
+        }
+        finally {
+            setTimeout(() => {
+                setIsDeleting(null); // Reset the deleting state after 1 second
+                cardDeleted()
+            }, 300);
+        }
+
     }
 
+
+
+    const [isDeleting, setIsDeleting] = useState<null | string>(null)
     const handleDeleteCard = (id: string) => {
-        dispatch(deleteCard(id))
-        listDeleted()
+        console.log("one item", oneItem)
+        setIsDeleting(id)
+        if (!oneItem) { // update it like titles 
+            try {
+                dispatch(deleteCard(id))
+            } catch (error) {
+                console.log("Er Del card ", error)
+            }
+            finally {
+                setTimeout(() => {
+                    setIsDeleting(null); // Reset the deleting state after 1 second
+                    listDeleted(); // Call the listDeleted function
+                }, 300);
+            }
+        }
     }
 
     const handleAddingNewCardInput = (id: string) => {
@@ -401,6 +425,7 @@ const HeroD = () => {
         }
     }, [isAddingNewCard, editingIndex, titleIndex]);
 
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (inputRef.current && !inputRef.current.contains(event.target as Node) && titleIndex) {
@@ -457,6 +482,7 @@ const HeroD = () => {
     }, [titleIndex, currentTitle, dispatch, editingIndex, currentTodo, isAddingNewCard, addingCardIndex, newInput]);
 
 
+    // Modal
     interface Item {
         id: string;
         value: string;
@@ -477,6 +503,7 @@ const HeroD = () => {
         setModalOpen(true);     // Open the modal
     };
     const closeModal = () => setModalOpen(false);
+
 
     return (
         <DndContext
@@ -543,13 +570,15 @@ const HeroD = () => {
                                                                 className='text-black text-[20px]'
                                                             />
                                                         </div>
-                                                        <div
+                                                        <button
+                                                            //onClick={() => handleDeleteCard(item.id)}
                                                             onClick={() => handleDeleteCard(item.id)}
+                                                            disabled={isDeleting === item.id} // Disable if the card is being deleted
                                                             className='hover:translate-y-[1px] transition-transform cursor-pointer'>
                                                             <FiTrash
                                                                 className='text-black text-[20px]'
                                                             />
-                                                        </div>                                                        
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 {/* Mapped Input Fields */}
@@ -605,14 +634,14 @@ const HeroD = () => {
                                                                                                 className="text-[18px]"
                                                                                             />
                                                                                         </div> */}
-                                                                                        <div
+                                                                                        <button
                                                                                             onClick={() => handleDeleteInput(item.id)}
+                                                                                            disabled={isDeletingI === item.id}
                                                                                             className=' text-black bg-[#6E776B] hover:opacity-90 rounded-full p-[3px] cursor-pointer transition-transform -translate-y-1/2'>
                                                                                             <FiTrash
                                                                                                 className="text-[18px]"
                                                                                             />
-                                                                                        </div>
-                                                                                    </div>
+                                                                                        </button>                                                                                                                                                                            </div>
                                                                                 </div>
                                                                             )}
                                                                     </Draggable>
@@ -664,17 +693,13 @@ const HeroD = () => {
                                     }}
                                 />
                             )}
-                            {/* {snapshot.isDraggingOver && (
-                                <div className="p-[8px] mr-[16px] bg-slate-400 w-[275px] rounded-2xl opacity-50"></div>
-                            )} */}
-
                             {/* {provided.placeholder} */}
                         </div>
                     )}
             </Droppable>
             {/* Modal Component */}
             <Modal isOpen={isModalOpen} onClose={closeModal} Item={selectedItem} />
-        </DndContext>
+        </DndContext >
     )
 }
 

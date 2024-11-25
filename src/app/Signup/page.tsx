@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useUserAuth } from "@/components/context/AuthContext";
+import { useUserAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Image from "next/image";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Logo from "@/components/assets/trelloo.png";
+import Logo from "@/assets/trelloo.png";
 import { TailSpin } from "react-loader-spinner";
 import { FirebaseError } from "firebase/app";
 
@@ -24,6 +24,22 @@ const SignUp: React.FC = () => {
 
   // const userSignUp = () => toast("Signed Up Successfully");
 
+
+// const signup = async() =>{
+//   setIsLoading(true)
+//   try {
+//     await register(email ,password)
+//     toast.success("Signed up successfully!");
+    
+//   } catch (error) {
+//     toast.error(error.message)
+    
+//   }finally{
+//     setIsLoading(false)
+//   }
+// }
+
+  
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };

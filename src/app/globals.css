@@ -1,12 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* 
-@layer base {
-    html {
-        @apply bg-[#8F3F66];
-    }
-} */
+
+.width-fill {
+  width: -webkit-fill-available;
+  width: -moz-available;
+  width: fill-available;
+}
 
 .roundedAndPadding {
   @apply py-[8px] px-[12px] rounded-xl

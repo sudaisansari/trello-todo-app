@@ -1,17 +1,17 @@
 "use client"
 import { RxActivityLog, RxCross1 } from "react-icons/rx";
 import { useState, useEffect, useRef } from "react";
-import { addWatchingState, deleteActivity, updateCardInput } from "@/app/redux/slice";
+import { addWatchingState, deleteActivity, updateCardInput } from "@/redux/slice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
-import { RootState } from "../shared/types";
+import { RootState } from "../types/types";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { FaCheck, FaTable } from "react-icons/fa";
 import { ImParagraphLeft } from "react-icons/im";
 import { useUserAuth } from "../context/AuthContext";
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
-import RichText from "../shared/RichtextActivity";
-import RichTextDesc from "../shared/RichTextDesc";
+import RichText from "./RichtextActivity";
+import RichTextDesc from "./RichTextDesc";
 
 interface Item {
   id: string;
@@ -35,6 +35,7 @@ interface ModalProps {
 
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
+  //console.log("Modal Rendered")
   const dispatch = useDispatch();
   const [editingTitle, setEditingTitle] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);

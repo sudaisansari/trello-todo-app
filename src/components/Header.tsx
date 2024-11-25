@@ -1,25 +1,18 @@
 "use client"
 import React, { useEffect, useRef, useState } from 'react'
-import { addNewInput, setCardsData } from '@/app/redux/slice'
+import { addNewInput, setCardsData } from '@/redux/slice'
 import { useDispatch } from "react-redux"
 import { useUserAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { subscribeToUserData } from '../shared/fetchFirestoreData';
-import { RootState } from '../shared/types';
+//import { subscribeToUserData } from '@/config/firebase';
+import { RootState } from '../types/types';
 import { useSelector } from 'react-redux';
 import Image from 'next/image';
-import Logo from "@/components/assets/trelloo.png"
+import Logo from "@/assets/trelloo.png"
 import Link from 'next/link';
 
-
-interface CardData {
-  id: string;
-  title: string;
-  inputs: Array<{ id: string; value: string }>; // Adjust based on the structure of your data
-}
-
 const Header = () => {
-  const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
+  //const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
   const dispatch = useDispatch()
   const [input, setInput] = useState<string>(''); // Input field
   const data = useSelector((state: RootState) => state.cardsArray || []);
@@ -33,15 +26,20 @@ const Header = () => {
     title: item.title
   }));
   const titles = data.map((item) => (item.id))
-  const [category, setCategory] = useState<string>(titles[0] || ''); // Dropdown selection
+  //console.log("titles : ", titles)
+  const [category, setCategory] = useState<string>(titles[0]); // Dropdown selection
+  
+  useEffect(() => {
+    if (titles.length > 0) {
+      setCategory(titles[0]); // Update state to the first title
+    }
+  }, [titles]); // Dependency on titles array
   //console.log("Cat : ", category)
 
 
   const email = user?.email
   const emailName = email?.split("@")[0].split(".")[0];
-  // console.log("Email Name : ", emailName)
-  //const userName = user?.displayName;
-  //const firstName = userName?.split(" ")[0];
+
   const [isUserOpen, setIsUserOpen] = useState(false);
   const popupRef = useRef<HTMLInputElement>(null); // Add a ref for the input field
   const [isUserOpenL, setIsUserOpenL] = useState(false);
@@ -79,20 +77,6 @@ const Header = () => {
     setIsUserOpenM((prev) => !prev);
   };
 
-  useEffect(() => {
-    if (user) {
-      const unsubscribe = subscribeToUserData(user.uid, setCardsArray);
-      return () => unsubscribe(); // Unsubscribe when the component unmounts
-    }
-  }, [user]);
-  console.log("Firestore data: ", cardsArray, " User ID: ", user?.uid);
-
-  useEffect(() => {
-    if (category === '' && titles.length > 0) {
-      setCategory(titles[0]); // Set to the first title when available
-    }
-  }, [titles, category]);
-
   const handleSignOut = () => {
     console.log("Called")
     try {
@@ -100,7 +84,7 @@ const Header = () => {
       logOut();
       dispatch(setCardsData([]))
       console.log("Redux Data after logout : ", data)
-      router.push("/Signup")
+      router.push("/SignIn")
     } catch (error) {
       console.log(error);
     }
@@ -160,8 +144,7 @@ const Header = () => {
               <select
                 value={category}
                 onChange={(e) => {
-                  const selectedId = e.target.value;
-                  setCategory(selectedId);
+                  setCategory(e.target.value);
                 }}
                 className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
               >
@@ -199,7 +182,7 @@ const Header = () => {
               onClick={togglePopupL}
               className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
               <span className="text-black font-[500]">
-                {initialCharacter ? initialCharacter : "A"}
+                {initialCharacter ? initialCharacter : ""}
               </span>
             </div>
             {/* Popup */}
@@ -210,7 +193,7 @@ const Header = () => {
               //onClick={(e) => e.stopPropagation()} // Prevent event bubbling
               >
                 <p className="text-md px-3 py-1 hover:bg-[#6E776B] font-semibold">{email || "No email available"}</p>
-                <Link href="/Signup">
+                <Link href="/SignIn">
                   <button
                     onClick={handleSignOut}
                     className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
@@ -247,7 +230,7 @@ const Header = () => {
                 onClick={togglePopupM}
                 className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
                 <span className="text-black font-[500]">
-                  {initialCharacter ? initialCharacter : "A"}
+                  {initialCharacter ? initialCharacter : ""}
                 </span>
               </div>
               {/* Popup */}
@@ -257,7 +240,7 @@ const Header = () => {
                 // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
                 >
                   <p className="text-md hover:bg-[#6E776B] py-1 px-3 font-semibold">{email || "No email available"}</p>
-                  <Link href="/Signup">
+                  <Link href="/SignIn">
                     <button
                       onClick={handleSignOut}
                       className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
@@ -335,7 +318,7 @@ const Header = () => {
               onClick={togglePopup}
               className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
               <span className="text-black font-[500]">
-                {initialCharacter ? initialCharacter : "A"}
+                {initialCharacter ? initialCharacter : ""}
               </span>
             </div>
             {/* Popup */}
@@ -345,7 +328,7 @@ const Header = () => {
               // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
               >
                 <p className="text-sm px-3 font-semibold">{email || "No email available"}</p>
-                <Link href="/Signup">
+                <Link href="/SignIn">
                   <button
                     onClick={handleSignOut}
                     className="text-sm px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
