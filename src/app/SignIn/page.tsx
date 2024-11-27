@@ -2,7 +2,7 @@
 import { useUserAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Logo from "@/assets/trelloo.png";
@@ -11,14 +11,16 @@ import { TailSpin } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FirebaseError } from "firebase/app";
+import { cardSignUp } from "@/config/firebase";
 
 const SignIn: React.FC = () => {
-  const {  googleSignIn, emailSignIn } = useUserAuth();
+  const { googleSignIn, emailSignIn } = useUserAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUserAuth()
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -29,13 +31,13 @@ const SignIn: React.FC = () => {
     try {
       await emailSignIn(email, password);
       toast.success("Signed in successfully!");
-      router.push("/");
+      //router.push("/");
     } catch (error: unknown) {
       // Show Firebase error in toast
       if (error instanceof FirebaseError) {
         toast.error(error.message || "Invalid email or password.");
         console.error(error);
-      }      
+      }
     } finally {
       setIsLoading(false);
     }
@@ -51,21 +53,23 @@ const SignIn: React.FC = () => {
     try {
       await googleSignIn();
       toast.success("Signed in with Google successfully!");
-      router.push("/");
+      //router.push("/");
     } catch (error: unknown) {
       if (error instanceof FirebaseError) {
         toast.error(error.message || "Failed to sign in with Google.");
         console.error(error);
       }
-      //toast.error(error.message || "Failed to sign in with Google.");
     }
   };
 
-  // useEffect(() => {
-  //   if (user) {
-  //     router.push("/");
-  //   }
-  // }, [user, router]);
+  useEffect(() => {
+    if (user) {
+      console.log("New User")
+      const uid = user.uid;
+      cardSignUp(uid);
+      router.push("/");
+    }
+  }, [router, user]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-[#ff00cc] to-[#3181CD]">
@@ -128,8 +132,10 @@ const SignIn: React.FC = () => {
 
         <div className="w-full p-3 rounded text-white">
           Don&apos;t have an account?{" "}
-          <Link href="/Signup" className="text-[#2F83CD]">
-            Sign Up
+          <Link href="/Signup" className="text-gray-700">
+            <button>
+              Sign Up
+            </button>
           </Link>
         </div>
       </div>

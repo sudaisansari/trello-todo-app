@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Providers } from "@/redux/Providers";
+import { Providers } from "@/store/Providers";
 import { AuthContextProvider } from "@/context/AuthContext";
 
 const geistSans = localFont({

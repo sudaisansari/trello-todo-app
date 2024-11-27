@@ -4,9 +4,9 @@ type CardInput = {
     description: string;
     watching: boolean;
     activity: {
-        id: string; // Unique identifier for each activity entry
-        content: string; // Stores rich text as HTML string
-        dateTime: string; // Timestamp for activity
+        id: string; 
+        content: string; 
+        dateTime: string; 
     }[];
     dateTime: string;
 };
@@ -21,18 +21,41 @@ export type RootState = {
     cardsArray: CardsArray[];
 };
 
-// interface Cards {
-//     id: string;
-//     title: string;
-//     inputs: {
-//         id: string;
-//         value: string;
-//         description: string; // Stores HTML content as a string
-//         activity: {
-//             id: string; // Unique identifier for each activity entry
-//             content: string; // Stores rich text as HTML string
-//             dateTime: string; // Timestamp for activity
-//         }[];
-//         dateTime: string; // Date and time for the input creation or last update
-//     }[];
-// }
+export interface Item {
+    id: string;
+    value: string;
+    description?: string;
+    dateTime?: string;
+    watching: boolean;
+    // Stores HTML content as a string
+    activity?: {
+        id: string; // Unique identifier for each activity entry
+        content: string; // Stores rich text as HTML string
+        dateTime: string; // Timestamp for activity
+    }[];
+}
+
+
+export interface Cards {
+    id: string;
+    title: string;
+    inputs: {
+        id: string;
+        value: string;
+        description: string;
+        dateTime: string;
+        watching: boolean;
+        activity: {
+            id: string;
+            content: string;
+            dateTime: string;
+        }[];
+    }[];
+}
+
+export interface PH {
+    clientHeight: number;
+    clientWidth: number;
+    clientY: number;
+    clientX: number;
+  }

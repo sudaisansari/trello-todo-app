@@ -1,10 +1,10 @@
 "use client"
 import { RxActivityLog, RxCross1 } from "react-icons/rx";
 import { useState, useEffect, useRef } from "react";
-import { addWatchingState, deleteActivity, updateCardInput } from "@/redux/slice";
+import { addWatchingState, deleteActivity, updateCardInput } from "@/store/slice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
-import { RootState } from "../types/types";
+import { Item, RootState } from "../types/types";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { FaCheck, FaTable } from "react-icons/fa";
 import { ImParagraphLeft } from "react-icons/im";
@@ -13,29 +13,14 @@ import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 import RichText from "./RichtextActivity";
 import RichTextDesc from "./RichTextDesc";
 
-interface Item {
-  id: string;
-  value: string;
-  description?: string;
-  dateTime?: string;
-  watching: boolean;
-  // Stores HTML content as a string
-  activity?: {
-    id: string; // Unique identifier for each activity entry
-    content: string; // Stores rich text as HTML string
-    dateTime: string; // Timestamp for activity
-  }[];
-}
-
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   Item: Item | null;
 }
 
-
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
-  //console.log("Modal Rendered")
+  console.log("Selected Item : ", Item?.id)
   const dispatch = useDispatch();
   const [editingTitle, setEditingTitle] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -209,7 +194,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
         </div>
 
         {/* Notification */}
-        <div className="ml-[28px] mt-[32px]">
+        <div className="ml-[28px] mt-[26px]">
           <h2 className="font-[500] text-[12px]">Notifications</h2>
           <div
             onClick={watchingClick}

@@ -1,18 +1,18 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react'
-import { addNewInput, setCardsData } from '@/redux/slice'
+import { useEffect, useRef, useState } from 'react'
+import { addNewInput, loggedOutUser, setCardsData } from '@/store/slice'
 import { useDispatch } from "react-redux"
 import { useUserAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
-//import { subscribeToUserData } from '@/config/firebase';
 import { RootState } from '../types/types';
 import { useSelector } from 'react-redux';
 import Image from 'next/image';
 import Logo from "@/assets/trelloo.png"
-import Link from 'next/link';
+// import Link from 'next/link';
+import * as React from 'react';
+
 
 const Header = () => {
-  //const [cardsArray, setCardsArray] = useState<CardData[]>([]); // Define type of cardsArray
   const dispatch = useDispatch()
   const [input, setInput] = useState<string>(''); // Input field
   const data = useSelector((state: RootState) => state.cardsArray || []);
@@ -25,17 +25,16 @@ const Header = () => {
     id: item.id,
     title: item.title
   }));
-  const titles = data.map((item) => (item.id))
-  //console.log("titles : ", titles)
-  const [category, setCategory] = useState<string>(titles[0]); // Dropdown selection
-  
-  useEffect(() => {
-    if (titles.length > 0) {
-      setCategory(titles[0]); // Update state to the first title
-    }
-  }, [titles]); // Dependency on titles array
-  //console.log("Cat : ", category)
 
+  const titles = data.map((item) => (item.id))
+  const [category, setCategory] = useState<string>(""); // Dropdown selection
+  console.log("Cat : ", category)
+  if (category === undefined || titles.length === 1) {
+    setTimeout(() => {
+      setCategory(titles[0]);
+      console.log("Category updated:", titles[0]);
+    }, 300)
+  }
 
   const email = user?.email
   const emailName = email?.split("@")[0].split(".")[0];
@@ -83,23 +82,13 @@ const Header = () => {
       console.log("Logging Out")
       logOut();
       dispatch(setCardsData([]))
+      dispatch(loggedOutUser());
       console.log("Redux Data after logout : ", data)
       router.push("/SignIn")
     } catch (error) {
       console.log(error);
     }
   };
-
-  // const handleAdd = () => {
-  //   if (input.trim() === '') {
-  //     setShowInputError(true); // Show ring if input is empty
-  //     return;
-  //   }
-  //   setShowInputError(false); // Remove ring if input is valid
-  //   console.log("Categ : ", category, " Input : ", input)
-  //   dispatch(addNewInput({ category, value: input }));
-  //   setInput(''); // Clear input after adding
-  // };
 
   const handleAdd = () => {
     if (input.trim() === '') {
@@ -146,7 +135,7 @@ const Header = () => {
                 onChange={(e) => {
                   setCategory(e.target.value);
                 }}
-                className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px]  rounded-xl mx-1 font-[500]"
+                className="bg-[#E5E7EB] text-black hover:cursor-pointer min-w-[72px] rounded-xl mx-1 font-[500]"
               >
                 {
                   transformedData.map((item) => (
@@ -193,14 +182,14 @@ const Header = () => {
               //onClick={(e) => e.stopPropagation()} // Prevent event bubbling
               >
                 <p className="text-md px-3 py-1 hover:bg-[#6E776B] font-semibold">{email || "No email available"}</p>
-                <Link href="/SignIn">
-                  <button
-                    onClick={handleSignOut}
-                    className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
-                  >
-                    Log Out
-                  </button>
-                </Link>
+                {/* <Link href="/SignIn"> */}
+                <button
+                  onClick={handleSignOut}
+                  className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
+                >
+                  Log Out
+                </button>
+                {/* </Link> */}
               </div>
             )}
           </div>
@@ -211,7 +200,7 @@ const Header = () => {
       {/* Tablet */}
       <div className='md:block lg:hidden hidden'>
         <div className='flex flex-col gap-y-[12px] items-center md:justify-evenly py-[8px] px-[40px] bg-prima bg-[#8D6ABF] [#7D857A] z-40 top-0 sticky'>
-          <div className='flex justify-evenly items-center w-full'>
+          <div className='flex justify-between items-center w-full'>
             {/* Logo */}
             <div className='flex gap-x-[4px] items-center justify-center cursor-pointer'>
               <Image src={Logo} alt='Trello' width={25} height={25} />
@@ -240,14 +229,14 @@ const Header = () => {
                 // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
                 >
                   <p className="text-md hover:bg-[#6E776B] py-1 px-3 font-semibold">{email || "No email available"}</p>
-                  <Link href="/SignIn">
-                    <button
-                      onClick={handleSignOut}
-                      className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
-                    >
-                      Log Out
-                    </button>
-                  </Link>
+                  {/* <Link href="/SignIn"> */}
+                  <button
+                    onClick={handleSignOut}
+                    className="text-md px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
+                  >
+                    Log Out
+                  </button>
+                  {/* </Link> */}
                 </div>
               )}
             </div>
@@ -299,7 +288,7 @@ const Header = () => {
 
       {/* Mobile  */}
       <div className='md:hidden flex flex-col gap-y-[8px] items-center md:justify-evenly py-[8px] px-[40px] bg-prima bg-[#8D6ABF] [#7D857A] z-40 top-0 sticky'>
-        <div className='flex justify-evenly items-center gap-x-1 w-full'>
+        <div className='flex justify-between items-center gap-x-1 w-full'>
           {/* Logo */}
           <div className='flex gap-x-[4px] items-center justify-center cursor-pointer'>
             <Image src={Logo} alt='Trello' width={25} height={25} />
@@ -328,14 +317,14 @@ const Header = () => {
               // style={{ opacity: isUserOpen ? 1 : 0, transform: isUserOpen ? 'translateY(0)' : 'translateY(-10px)' }}
               >
                 <p className="text-sm px-3 font-semibold">{email || "No email available"}</p>
-                <Link href="/SignIn">
-                  <button
-                    onClick={handleSignOut}
-                    className="text-sm px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
-                  >
-                    Log Out
-                  </button>
-                </Link>
+                {/* <Link href="/SignIn"> */}
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm px-3 py-1 hover:bg-[#6E776B] text-red-700 hover:text-black w-full text-start font-semibold hover:translate-y-[1px] transition-transform"
+                >
+                  Log Out
+                </button>
+                {/* </Link> */}
               </div>
             )}
           </div>

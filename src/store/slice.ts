@@ -1,63 +1,39 @@
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit"
+import { Cards } from "@/types/types"
+import { addCardToFirestore, cardSignUp, deleteInputFromFirestore, updateCardsDataInFirestore } from "@/config/firebase";
 
-interface Cards {
+interface UserInfo {
+    email: string;
     id: string;
-    title: string;
-    inputs: {
-        id: string;
-        value: string;
-        description: string;
-        dateTime: string;
-        watching: boolean;
-        activity: {
-            id: string;
-            content: string;
-            dateTime: string;
-        }[];
-    }[];
 }
-
-// interface CardData {
-//     cardsArray: Cards[];
-//     email: string;
-//     name: string;
-// }
 
 interface InitialState {
     cardsArray: Cards[];
+    user: UserInfo | null;
 }
-
-// {
-//     id: "324",
-//     title: "Todo",
-//     inputs: [
-//         {
-//             id: nanoid(),
-//             value: "Task 1",
-//             description: "",
-//             activity: [],
-//             watching: false,
-//             dateTime: new Date().toLocaleString('en-US', {
-//                 timeZone: 'Asia/Karachi',
-//                 year: 'numeric',
-//                 month: 'short',
-//                 day: 'numeric',
-//                 hour: 'numeric',
-//                 minute: 'numeric',
-//                 hour12: true
-//             })
-//         }
-//     ]
-// }
 
 const initialState: InitialState = {
     cardsArray: [],
+    user: null
 }
 
 const Slice = createSlice({
     name: "addUserSlice",
     initialState,
     reducers: {
+        signupUpdate: (state) => {
+            const uid = state.user?.id
+            if (uid) {
+                cardSignUp(uid)
+            }
+        },
+        loggedInUser: (state, action) => {
+            const { email, id } = action.payload
+            state.user = { email, id }
+        },
+        loggedOutUser: (state) => {
+            state.user = null
+        },
         addNewInput: (state, action) => {
             console.log("Action of New Input:", action.payload);
             const { id, value } = action.payload;
@@ -80,6 +56,13 @@ const Slice = createSlice({
             console.log("Category : ", id, "New Input : ", value, "in Slice")
             state.cardsArray.find((item) => (item.id === id))?.inputs.push(inputdata)
             console.log("Input Updated : ", state.cardsArray)
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         addNewCard: (state, action) => {
             console.log("Action of Title New Card:", action.payload);
@@ -90,7 +73,12 @@ const Slice = createSlice({
                 title: category,
                 inputs: []
             };
-            state.cardsArray.push(cardsData);
+
+            const uid = state.user?.id
+            if (uid) {
+                addCardToFirestore(uid, cardsData)
+            }
+            //state.cardsArray.push(cardsData);
             console.log("Cards Array:", state.cardsArray);
         },
         updateCardTitle: (state, action) => {
@@ -100,7 +88,16 @@ const Slice = createSlice({
             if (id >= 0) {
                 state.cardsArray[id].title = title;
                 console.log("Todo Updated : ", title)
+            } else {
+                console.log("Error updating title")
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         updateCardInput: (state, action) => {
             console.log("Updating Card Title");
@@ -124,6 +121,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified input ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         addCardInput: (state, action) => {
             console.log("Adding New input in Card");
@@ -153,31 +157,42 @@ const Slice = createSlice({
             } else {
                 console.error("Card with specified ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         deleteCardInput: (state, action) => {
-            console.log("Deleting New input in Card");
+            //console.log("Deleting New input in Card");
             const id = action.payload;
             console.log("ID to Delete : ", id);
-
-            const card = state.cardsArray.find(card =>
-                card.inputs.some(inputItem => inputItem.id === id)
-            );
-
-            if (card) {
-                const inputIndex = card.inputs.findIndex(input => input.id === id); // Find input index by ID
-                if (inputIndex !== -1) {
-                    card.inputs.splice(inputIndex, 1); // Remove the input from the card’s inputs
-                    console.log("Input Deleted");
-                } else {
-                    console.error("Input with specified ID not found in the card.");
-                }
-            } else {
-                console.error("Card with specified ID not found.");
+            const uid = state.user?.id
+            if (uid) {
+                deleteInputFromFirestore(uid, id)
             }
+            // const card = state.cardsArray.find(card =>
+            //     card.inputs.some(inputItem => inputItem.id === id)
+            // );
+
+            // if (card) {
+            //     const inputIndex = card.inputs.findIndex(input => input.id === id); // Find input index by ID
+            //     if (inputIndex !== -1) {
+            //         card.inputs.splice(inputIndex, 1); // Remove the input from the card’s inputs
+            //         console.log("Input Deleted");
+            //     } else {
+            //         console.error("Input with specified ID not found in the card.");
+            //     }
+            // } else {
+            //     console.error("Card with specified ID not found.");
+            // }
         },
         deleteCard: (state, action) => {
             console.log("Deleting Card");
             const id = action.payload;
+            // deleteCardFromFirestore(user?.uid, id)
             console.log("ID to Delete : ", id);
             const cardIndex = state.cardsArray.findIndex(card => card.id === id);
             if (cardIndex !== -1) {
@@ -196,6 +211,13 @@ const Slice = createSlice({
             const { id, title } = action.payload;
             console.log("ID : ", id, "New Todo : ", title, "in Slice",)
             state.cardsArray.find((item) => (item.id === id))!.title = title
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            console.log("title edited", updatedData);
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
         },
         addDescription: (state, action) => {
             console.log("Adding Description")
@@ -218,6 +240,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified input ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         addWatchingState: (state, action) => {
             console.log("Adding Watching State")
@@ -240,6 +269,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified input ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         updateDescription: (state, action) => {
             console.log("Updating Description");
@@ -266,6 +302,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified input ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
 
 
@@ -305,6 +348,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified input ID not found.");
             }
+            const dataU = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(dataU))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         updateActivity: (state, action) => {
             console.log("Editing Activity");
@@ -342,6 +392,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified activity ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         deleteActivity: (state, action) => {
             console.log("Deleting Activity");
@@ -379,6 +436,13 @@ const Slice = createSlice({
             } else {
                 console.error("Card containing the specified activity ID not found.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
 
 
@@ -427,6 +491,13 @@ const Slice = createSlice({
             else {
                 console.error("Failed to find card or invalid indices.");
             }
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
         reorderCards: (state, action: PayloadAction<{ sourceIndex: number, destinationIndex: number }>) => {
             const { sourceIndex, destinationIndex } = action.payload;
@@ -435,9 +506,16 @@ const Slice = createSlice({
             const [movedCard] = state.cardsArray.splice(sourceIndex, 1);
             state.cardsArray.splice(destinationIndex, 0, movedCard);
             console.log("Card Updated  : ", movedCard);
+            const data = state.cardsArray.map(item => item)
+            const updatedData = JSON.parse(JSON.stringify(data))
+            const uid = state.user?.id
+            if (uid) {
+                updateCardsDataInFirestore(uid, updatedData)
+            }
+            console.log("UD ", updatedData);
         },
     }
 })
 
-export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity, updateDescription, addWatchingState } = Slice.actions
+export const { addCardInput, addNewCard, updateCardTitle, updateCardInput, addNewInput, reorderCardItems, reorderCards, deleteCardInput, deleteCard, setCardsData, editTitle, addDescription, addActivity, updateActivity, deleteActivity, updateDescription, addWatchingState, loggedInUser, loggedOutUser, signupUpdate } = Slice.actions
 export default Slice.reducer

@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Logo from "@/assets/trelloo.png";
 import { TailSpin } from "react-loader-spinner";
 import { FirebaseError } from "firebase/app";
+import { cardSignUp } from "@/config/firebase";
 
 
 const SignUp: React.FC = () => {
@@ -22,35 +23,16 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Track loading state
 
-  // const userSignUp = () => toast("Signed Up Successfully");
-
-
-// const signup = async() =>{
-//   setIsLoading(true)
-//   try {
-//     await register(email ,password)
-//     toast.success("Signed up successfully!");
-    
-//   } catch (error) {
-//     toast.error(error.message)
-    
-//   }finally{
-//     setIsLoading(false)
-//   }
-// }
-
-  
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
   const handleEmailSignUp = async () => {
     setIsLoading(true);
-    setError(""); // Clear previous error
+    setError("");
     try {
       await emailSignUp(email, password);
       toast.success("Signed in successfully!");
-      router.push("/");
     } catch (error: unknown) {
       // Check if error is a FirebaseError or cast it to a known type
       if (error instanceof FirebaseError) {
@@ -75,7 +57,7 @@ const SignUp: React.FC = () => {
     try {
       await googleSignIn();
       toast.success("Signed in with Google successfully!");
-      router.push("/");
+      //router.push("/");
     } catch (error: unknown) {
       if (error instanceof FirebaseError) {
         toast.error(error.message || "Failed to sign in with Google.")
@@ -88,7 +70,7 @@ const SignUp: React.FC = () => {
     if (e.key === 'Enter') { // and this
       try {
         await handleEmailSignUp();
-        router.push("/");
+        //router.push("/");
       } catch (error) {
         setError("Invalid email or password.");
         console.error(error);
@@ -98,7 +80,9 @@ const SignUp: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      // userSignUp()
+      console.log("New User")
+      const uid = user.uid;
+      cardSignUp(uid);
       router.push("/");
     }
   }, [router, user]);
@@ -161,8 +145,10 @@ const SignUp: React.FC = () => {
         </button>
         <div className="w-full p-3 rounded text-white">
           Already have an account?{" "}
-          <Link href="/SignIn" className="text-[#2F83CD]">
-            Sign In
+          <Link href="/SignIn" className="text-gray-700">
+            <button>
+              Sign In
+            </button>
           </Link>
         </div>
       </div>

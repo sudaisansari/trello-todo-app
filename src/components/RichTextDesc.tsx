@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import { useDispatch } from "react-redux";
-import { addDescription, updateDescription } from "@/redux/slice";
+import { addDescription, updateDescription } from "@/store/slice";
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -96,13 +96,13 @@ const RichTextDesc: React.FC<ModalProps> = ({ handleClose, Id, initialContent })
             handleSaveDescription();
             handleClose();
           }}
-          className="cursor-pointer mt-[8px] w-max flex flex-row px-3 py-2 bg-[#579DFF] text-black hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center"
+          className="cursor-pointer mt-[8px] font-[500] w-max flex flex-row px-3 py-2 bg-[#579DFF] text-black hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center"
         >
           Save
         </div>
         <div
           onClick={handleClose}
-          className="cursor-pointer mt-[8px] w-max flex flex-row px-3 py-2 bg-[#6E776B] text-black hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center"
+          className="cursor-pointer mt-[8px] w-max font-[500] flex flex-row px-3 py-2 bg-[#6E776B] text-black hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center"
         >
           Cancel
         </div>

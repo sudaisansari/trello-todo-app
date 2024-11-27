@@ -1,5 +1,5 @@
 "use client";
-import { addNewCard } from "@/redux/slice";
+import { addNewCard } from "@/store/slice";
 import React, { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { useDispatch } from "react-redux";
