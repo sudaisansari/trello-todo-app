@@ -13,7 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import DroppableCard from "./DroppableCard";
 import dynamic from "next/dynamic";
 
-const DynamicModal = dynamic(() => import("@/components/Modal"), { ssr: false })
+const DynamicModal = dynamic(() => import("@/components/Modal/Modal"), { ssr: false })
 
 const List = () => {
     const data = useSelector((state: RootState) => state.cardsArray || []);
@@ -65,7 +65,7 @@ const List = () => {
             console.log("Parent N : ", parentNode)
             if (parentNode instanceof Element) { // Ensure parentNode is an Element
                 if (sourceIndex === 0) {
-                    const clientX = 16;
+                    const clientX = 16
                     setPl(clientX)
                     setPlaceholderProps({
                         clientHeight,
@@ -76,36 +76,18 @@ const List = () => {
                         clientX: clientX
                     });
                 }
-                else if (sourceIndex === 1) {
+                else if (sourceIndex >= 0) {
                     const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
                         [...parentNode.children]
                             .slice(0, sourceIndex)
                             .reduce((total, curr) => {
                                 const style = window.getComputedStyle(curr);
-                                const marginRight = parseFloat(style.marginRight); // Use marginRight for horizontal space
-                                const additionalGap = sourceIndex * 16 // Add gap except after the last element
-                                return total + curr.clientWidth + marginRight + 16 + additionalGap;
-                            }, 0);
-                    setPl(clientX)
-                    setPlaceholderProps({
-                        clientHeight,
-                        clientWidth,
-                        clientY: parseFloat(
-                            window.getComputedStyle(parentNode).paddingLeft
-                        ),
-                        clientX: clientX
-                    });
-                } else if (sourceIndex > 1) {
-                    const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
-                        [...parentNode.children]
-                            .slice(0, sourceIndex)
-                            .reduce((total, curr) => {
-                                const style = window.getComputedStyle(curr);
-                                const marginRight = parseFloat(style.marginRight); // Use marginRight for horizontal space
-                                const additionalGap = sourceIndex * 16 + 16 // Add gap except after the last element
+                                const marginRight = parseFloat(style.marginRight);
+                                const additionalGap = sourceIndex * 16 + 16
                                 const gapToAdd = additionalGap / sourceIndex
                                 return total + curr.clientWidth + marginRight + gapToAdd;
                             }, 0);
+                    console.log("Client X : ", clientX)
                     setPl(clientX)
                     setPlaceholderProps({
                         clientHeight,
@@ -116,7 +98,6 @@ const List = () => {
                         clientX: clientX
                     });
                 }
-
             }
         };
     }
@@ -150,35 +131,17 @@ const List = () => {
                     clientY: parseFloat(window.getComputedStyle(parentNode).paddingTop), // Use paddingTop if needed
                     clientX: clientX
                 });
-            } else if (destinationIndex === 1) {
+            } else if (destinationIndex >= 1) {
                 const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
                     [...parentNode.children]
                         .slice(0, destinationIndex) // Or `sourceIndex` in case of `dragStart`
                         .reduce((total, curr) => {
                             const style = window.getComputedStyle(curr);
                             const marginRight = parseFloat(style.marginRight);
-                            return total + curr.clientWidth + marginRight + 16 + 16; // 16px gap added here
-                        }, 0);
-
-                // Set placeholder properties for positioning
-                setPl(clientX);
-                setPlaceholderProps({
-                    clientHeight,
-                    clientWidth,
-                    clientY: parseFloat(window.getComputedStyle(parentNode).paddingTop), // Use paddingTop if needed
-                    clientX: clientX
-                });
-            }
-            else if (destinationIndex > 1 && childrenArray.length) {
-                const clientX = parseFloat(window.getComputedStyle(parentNode).paddingLeft) +
-                    [...parentNode.children]
-                        .slice(0, destinationIndex) // Or `sourceIndex` in case of `dragStart`
-                        .reduce((total, curr) => {
-                            const style = window.getComputedStyle(curr);
-                            const marginRight = parseFloat(style.marginRight);
-                            const additionalGap = destinationIndex * 16 + 16 // Add gap except after the last element
+                            // return total + curr.clientWidth + marginRight + 32; // 16px gap added here
+                            const additionalGap = destinationIndex * 16 + 16
                             const gapToAdd = additionalGap / destinationIndex
-                            return total + curr.clientWidth + marginRight + gapToAdd; // 16px gap added here
+                            return total + curr.clientWidth + marginRight + gapToAdd;
                         }, 0);
 
                 // Set placeholder properties for positioning
@@ -190,10 +153,8 @@ const List = () => {
                     clientX: clientX
                 });
             }
-
         }
-    };
-
+    }
 
     const onDragEnd = (result: DropResult) => {
         setPlaceholderProps({
@@ -206,10 +167,6 @@ const List = () => {
         setIsDragging(false);  //old
         console.log("On Drag End", isDragging)
         const { source, destination, draggableId } = result;
-        console.log("Result : ", result);
-        console.log("Source : ", source);
-        console.log("Destination : ", destination);
-        console.log("Draggable ID : ", draggableId);
 
         // Replacing Card from Eachother
         if (draggableId.includes("card-") && source.index !== destination?.index) {

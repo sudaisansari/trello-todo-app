@@ -28,7 +28,6 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
   const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
   const listDeleted = () => toast("List Deleted");
   const [oneItem, setOneItem] = useState(data.length === 1);
-  const [isAddingNewCard, setIsAddingNewCard] = useState(false);
   const [addingCardIndex, setaddingCardIndex] = useState<string | null>(null); // Track which input is being edited
   const [newInput, setNewInput] = useState(''); // State for new input
   const { user } = useUserAuth()
@@ -41,7 +40,7 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
       else {
         dispatch(addCardInput({ id, input: newInput }))
         setNewInput('')
-        setIsAddingNewCard(false)
+        setaddingCardIndex(null)
       }
     }
   };
@@ -49,7 +48,6 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
   const handleAddingNewCardInput = (id: string) => {
     console.log("Adding New Input Index : ", id)
     setaddingCardIndex(id);
-    setIsAddingNewCard(true)
     setNewInput('');
   };
 
@@ -79,7 +77,6 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
   };
 
   const handleEditTitleClick = (id: string, title: string) => {
-    console.log("ASDasd")
     setTitleIndex(id);
     setCurrentTitle(title);
   };
@@ -97,14 +94,14 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
   };
 
   useEffect(() => {
-    if (isAddingNewCard && inputRef.current || titleIndex && inputRef.current) {
-      inputRef.current.focus(); // Focus the input when InpuField becomes true
+    if (addingCardIndex && inputRef.current || titleIndex && inputRef.current) {
+      inputRef.current.focus(); 
     }
-  }, [isAddingNewCard, titleIndex]);
+  }, [addingCardIndex, titleIndex]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(event.target as Node) && isAddingNewCard && addingCardIndex) {
+      if (inputRef.current && !inputRef.current.contains(event.target as Node) && addingCardIndex) {
         if (newInput.trim() === '') {
           console.log("No input")
           setaddingCardIndex(null); 
@@ -113,10 +110,8 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
           dispatch(addCardInput({ id: addingCardIndex, input: newInput }))
           setaddingCardIndex(null); 
           setNewInput('')
-          setIsAddingNewCard(false)
         }
       } else if (inputRef.current && !inputRef.current.contains(event.target as Node) && titleIndex) {
-        // Dispatch action to save the title change on outside click
         if (currentTitle.trim() === '') {
           console.log("No input")
           setTitleIndex(null)
@@ -191,7 +186,7 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
                   <InputField handleInputClick={handleInputClick} key={inputItem.id} inputItem={inputItem} index={i} />
                 ))}
                 {/* Conditionally Show New Input Field */}
-                {addingCardIndex === item.id && isAddingNewCard && (
+                {addingCardIndex === item.id && (
                   <div className='mt-[4px]'>
                     <input
                       type='text'
