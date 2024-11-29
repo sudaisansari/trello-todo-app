@@ -16,7 +16,7 @@ const DroppableCard: React.FC<DroppableAreaProps> = ({ data, placeholderProps, h
       <div 
         {...provided.droppableProps}
         ref={provided.innerRef}
-        className={`overflow-x-auto h-[326px] md:h-[386px] lg:h-[436px] relative flex items-start justify-start pt-4`}
+        className={`overflow-x-auto h-[362px] md:h-[392px] lg:h-[434px] relative flex items-start justify-start pt-4`}
       >
         {data.map((item, index) => (
           <DraggableCard handleInputClick={handleInputClick} key={item.id} item={item} index={index} />

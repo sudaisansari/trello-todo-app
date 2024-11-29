@@ -10,15 +10,17 @@ import { fetchDataFromFirebase } from "@/config/firebase";
 import { useUserAuth } from "@/context/AuthContext";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Modal from "@/components/Modal";
 import DroppableCard from "./DroppableCard";
+import dynamic from "next/dynamic";
 
-const HeroD = () => {
+const DynamicModal = dynamic(() => import("@/components/Modal"), { ssr: false })
+
+const List = () => {
     const data = useSelector((state: RootState) => state.cardsArray || []);
     const dispatch = useDispatch();
     const { user } = useUserAuth();
     const [isDragging, setIsDragging] = useState(false)
-    
+
     const handleLogin = (user: { email: string; id: string }) => {
         dispatch(loggedInUser(user));
     };
@@ -289,9 +291,9 @@ const HeroD = () => {
                 data={data}
                 placeholderProps={placeholderProps}
             />
-            <Modal isOpen={isModalOpen} onClose={closeModal} Item={selectedItem} />
+            <DynamicModal isOpen={isModalOpen} onClose={closeModal} Item={selectedItem} />
         </DndContext>
     )
 }
 
-export default HeroD
+export default List

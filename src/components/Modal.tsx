@@ -1,17 +1,18 @@
 "use client"
-import { RxActivityLog, RxCross1 } from "react-icons/rx";
-import { useState, useEffect, useRef } from "react";
+import { RxActivityLog } from "react-icons/rx";
+import { useState } from "react";
 import { addWatchingState, deleteActivity, updateCardInput } from "@/store/slice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { Item, RootState } from "../types/types";
-import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { FaCheck, FaTable } from "react-icons/fa";
 import { ImParagraphLeft } from "react-icons/im";
 import { useUserAuth } from "../context/AuthContext";
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 import RichText from "./RichtextActivity";
 import RichTextDesc from "./RichTextDesc";
+import CardAddedUser from "./Modal/CardAddedUser";
+import Notification from "./Modal/Notification";
+import TitleWithClose from "./Modal/TitleClose";
 
 interface ModalProps {
   isOpen: boolean;
@@ -23,7 +24,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
   console.log("Selected Item : ", Item?.id)
   const dispatch = useDispatch();
   const [editingTitle, setEditingTitle] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const data = useSelector((state: RootState) => state.cardsArray || []);
   const [isWatching, setIsWatching] = useState(false)
   const { user } = useUserAuth()
@@ -109,39 +109,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(event.target as Node) && editingTitle) {
-        if (currentTitle?.trim() === '') {
-          console.log("No input")
-          setEditingTitle(false)
-        }
-        else {
-          dispatch(updateCardInput({ id: Item?.id, input: currentTitle }));
-          setEditingTitle(false); // Reset edit mode
-          setCurrentTitle('')
-        }
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [Item?.id, currentTitle, dispatch, editingTitle])
-
-  useEffect(() => {
-    if (editingTitle && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editingTitle]);
-  // Sync currentTitle with the latest Item value whenever Item changes
-  // useEffect(() => {
-  //   if (Item) {
-  //     setCurrentTitle(Item.value);
-  //   }
-  // }, [Item]);
-
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose(); // Close the modal if the click is on the overlay
@@ -158,60 +125,23 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
       <div className="bg-[#E5E7EB] h-[500px] w-full lg:w-[768px] overflow-y-auto my-[42px] lg:mx-0 mx-2 md:mx-8 px-2 md:px-5 rounded-xl z-10">
         <div className="bg-[#E5E7EB] sticky top-0 h-2 md:h-5"></div>
 
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-x-3">
-            <div>
-              <FaTable className="text-[16px]" />
-            </div>
-            <div className="">
-              <div>
-                {editingTitle ? (
-                  <input
-                    type="text"
-                    ref={inputRef}
-                    value={currentTitle}
-                    onChange={handleTitleChange}
-                    className={`pl-[2px] pr-[6px] text-[24px] tracking-wider font-[600] break-word w-[90%] rounded-xl bg-[#E5E7EB] text-black hover:ring-2 ring-white cursor-text`}
-                    onKeyDown={handleKeyDownTitle}
-                  />
-                ) : (
-                  <div
-                    onClick={() => handleTitleClick(itemData?.value)}
-                    className='font-[600] text-[24px] tracking-wider break-word pl-[2px] max-w-[176px] max-h-[100px] overflow-hidden py-[2px] w-full rounded-xl bg-[#E5E7EB] text-black'>
-                    {itemData?.value}
-                  </div>
-                )}
-              </div>
-              <div className="text-[16px]">
-                in list  <span className="font-[700]">{card?.title && card.title.length > 10 ? `${card.title.slice(0, 9)}..` : card?.title || ""}</span>
-              </div>
-            </div>
-          </div>
-          {/* Close Button */}
-          <div onClick={onClose} className="cursor-pointer">
-            <RxCross1 className="text-[24px]" />
-          </div>
-        </div>
+        {/* Task title, List name, and Close Button */}
+        <TitleWithClose
+          cardTitle={card?.title}
+          value={itemData?.value}
+          editingTitle={editingTitle}
+          currentTitle={currentTitle}
+          onClose={onClose}
+          handleTitleClick={handleTitleClick}
+          handleTitleChange={handleTitleChange}
+          handleKeyDownTitle={handleKeyDownTitle}
+          setEditingTitle={setEditingTitle}
+          setCurrentTitle={setCurrentTitle}
+          itemId={Item?.id}
+        />
 
         {/* Notification */}
-        <div className="ml-[28px] mt-[26px]">
-          <h2 className="font-[500] text-[12px]">Notifications</h2>
-          <div
-            onClick={watchingClick}
-            className='cursor-pointer mt-[8px] w-max flex flex-row px-3 py-2 bg-[#6E776B] text-black hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
-            {/* Add Card Button */}
-            < div
-              className='flex flex-row items-center gap-x-[8px] text-black '
-            //onClick={submitInput} // Show new input field when clicked
-            >
-              <MdOutlineRemoveRedEye className='text-[18px]' />
-              <span className='text-[16px] font-[500]'>Watching</span>
-              {itemData?.watching &&
-                <FaCheck />
-              }
-            </div>
-          </div>
-        </div>
+        <Notification watchingClick={watchingClick} itemWatching={itemData?.watching} />
 
         {/* Description */}
         <div className="mt-[26px]">
@@ -349,21 +279,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, Item }) => {
 
         {/* Card Added User */}
         <div className="mt-[12px]">
-          <div className="flex items-start gap-x-2">
-            <div className="bg-[#FF991F] flex items-center justify-center rounded-full p-4 w-5 h-5">
-              <span className="text-black ">
-                {initialCharacter ? initialCharacter : "A"}
-              </span>
-            </div>
-            <div>
-              <div className="text-[14px] font-[500]">
-                <span className="text-[16px] font-[500]">{emailName}</span> added this card to {card?.title && card.title.length > 10 ? `${card.title.slice(0, 9)}..` : card?.title || ""}
-              </div>
-              <div className="text-[14px] font-[500]">
-                {itemData?.dateTime}
-              </div>
-            </div>
-          </div>
+          <CardAddedUser emailName={emailName} initialCharacter={initialCharacter} cardTitle={card?.title} dateTime={itemData?.dateTime} />
         </div>
         <div className="bg-[#E5E7EB] sticky bottom-0 h-2 md:h-5"></div>
       </div>

@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import AddAnotherList from "@/components/AddAnotherList";
-import HeroD from "@/components/List/List";
+import List from "@/components/List/List";
 
 export default function Home() {
   return (
@@ -16,8 +16,7 @@ export default function Home() {
               <AddAnotherList />
             </div>
             <div className="overflow-x-auto w-full">
-              <HeroD />
-              {/* <Lists /> */}
+              <List />
             </div>
           </div>
         </div>

@@ -34,3 +34,21 @@
   }
   
   
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 6px;
+  }
+  
+  .tooltip[data-popper-arrow]::after {
+    content: '';
+    border-color: transparent transparent gray transparent;
+  }
+  

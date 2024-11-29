@@ -185,7 +185,7 @@ const DraggableCard: React.FC<DCard> = ({ item, index, handleInputClick }) => {
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="px-2 pb-2 pt-1 flex flex-col gap-y-[8px] max-h-[120px] md:max-h-[180px] lg:max-h-[230px] overflow-y-auto"
+                className="px-2 pb-2 pt-1 flex flex-col gap-y-[8px] max-h-[120 max-h-[160px] md:max-h-[180 md:max-h-[190px] lg:max-h-[230px] overflow-y-auto"
               >
                 {item.inputs.map((inputItem, i) => (
                   <InputField handleInputClick={handleInputClick} key={inputItem.id} inputItem={inputItem} index={i} />

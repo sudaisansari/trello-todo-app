@@ -3,14 +3,13 @@ import { useEffect, useRef, useState } from 'react'
 import { addNewInput, loggedOutUser, setCardsData } from '@/store/slice'
 import { useDispatch } from "react-redux"
 import { useUserAuth } from '../context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { RootState } from '../types/types';
-import { useSelector } from 'react-redux';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation'
+import { RootState } from '../types/types'
+import { useSelector } from 'react-redux'
+import Image from 'next/image'
 import Logo from "@/assets/trelloo.png"
-// import Link from 'next/link';
-import * as React from 'react';
-
+import * as React from 'react'
+import 'react-tooltip/dist/react-tooltip.css'
 
 const Header = () => {
   const dispatch = useDispatch()
@@ -19,15 +18,14 @@ const Header = () => {
   const { logOut } = useUserAuth();
   const router = useRouter()
   const { user } = useUserAuth(); // To get the logged-in user
-  const [showInputError, setShowInputError] = useState<boolean>(false); // State to manage input error ring
+  const [showInputError, setShowInputError] = useState<boolean>(false); 
 
   const transformedData = data.map((item) => ({
     id: item.id,
     title: item.title
   }));
-
   const titles = data.map((item) => (item.id))
-  const [category, setCategory] = useState<string>(""); // Dropdown selection
+  const [category, setCategory] = useState<string>(""); 
   console.log("Cat : ", category)
   if (category === undefined || titles.length === 1) {
     setTimeout(() => {
@@ -45,7 +43,7 @@ const Header = () => {
   const popupRefL = useRef<HTMLInputElement>(null); // Add a ref for the input field
   const [isUserOpenM, setIsUserOpenM] = useState(false);
   const popupRefM = useRef<HTMLInputElement>(null); // Add a ref for the input field
-
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const initialCharacter = emailName ? emailName.charAt(0).toUpperCase() : "";
 
   useEffect(() => {
@@ -56,6 +54,8 @@ const Header = () => {
         setIsUserOpenL(false);
       } else if (isUserOpenM && popupRefM.current && !popupRefM.current.contains(event.target as Node)) {
         setIsUserOpenM(false);
+      } else if (!dropdownOpen && popupRefM.current && !popupRefM.current.contains(event.target as Node)) {
+        setDropdownOpen(false)
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -106,7 +106,6 @@ const Header = () => {
     setInput(''); // Clear input after adding
   };
 
-
   return (
     <div>
       <div className='lg:block hidden'>
@@ -117,7 +116,6 @@ const Header = () => {
             <h1 className='font-[700] text-[20px] md:text-[30px] text-[#F4F4F4] md:leading-[1.66666666667vw]'>Trello</h1>
           </div>
 
-          {/* Input (Center on mobile) */}
           <div className="flex flex-col md:flex-row justify-between md:justify-between">
             {/* Input Section */}
             <div className="flex justify-center my-1 md:my-0">
@@ -148,6 +146,7 @@ const Header = () => {
                   ))
                 }
               </select>
+
               {/* Add Button */}
               < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
                 <button
@@ -162,11 +161,6 @@ const Header = () => {
             ref={popupRefL}
             className="relative">
             {/* Main Button */}
-            {/* < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
-              <button onClick={togglePopupL} className="text-black text-[16px] font-[500]">
-                Hey {firstName ? firstName : emailName}
-              </button>
-            </div> */}
             <div
               onClick={togglePopupL}
               className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
@@ -210,11 +204,6 @@ const Header = () => {
               ref={popupRefM}
               className="relative">
               {/* Main Button */}
-              {/* < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-center ' >
-                <button onClick={togglePopupM} className="text-black text-[16px] font-[500]">
-                  Hey {firstName ? firstName : emailName}
-                </button>
-              </div> */}
               <div
                 onClick={togglePopupM}
                 className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
@@ -298,11 +287,6 @@ const Header = () => {
             ref={popupRef}
             className="relative">
             {/* Main Button */}
-            {/* < div className='cursor-pointer flex flex-row px-3 py-2 bg-[#E5E7EB]  text-[#F4F4F4] hover:translate-y-[1px] transition-transform rounded-xl items-center justify-ce' >
-              <button onClick={togglePopup} className="text-black text-[14px] font-[500]">
-                Hey {firstName ? firstName : emailName}
-              </button>
-            </div> */}
             <div
               onClick={togglePopup}
               className="bg-[#FF991F] hover:cursor-pointer hover:ring-2 ring-white flex items-center justify-center rounded-full p-4 w-5 h-5">
